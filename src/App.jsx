@@ -316,35 +316,43 @@ function SouthBrazilMap({ schoolsByState }) {
 
   return (
     <div className="mini-map">
-      <svg viewBox="0 0 320 400" className="map-svg">
-        {/* SP */}
-        <path d="M120 40 C140 25,200 20,240 30 C260 38,270 55,265 75 C260 95,230 105,200 100 C175 95,145 90,125 80 C105 70,100 55,120 40Z"
-          fill="#e8f4fd" stroke="#b0d4f1" strokeWidth="1.5" />
-        <circle cx={200} cy={60} r={10} fill={stateColors.SP} />
-        <text x={215} y={55} fill="#374151" fontSize="15" fontWeight="700">SP</text>
-        <text x={200} y={85} textAnchor="middle" fill="#6b7280" fontSize="10">{schoolsByState.SP} atend.</text>
+      <div className="map-container">
+        {/* Map Image */}
+        <img 
+          src="/mapa-sul.png" 
+          alt="Mapa do Sul do Brasil" 
+          className="map-image"
+        />
+        
+        {/* State Indicators overlaid absolutely */}
+        {/* Rio Grande do Sul (RS) */}
+        <div className="map-dot-wrapper" style={{ bottom: '25px', left: '65px' }}>
+          <span className="map-pulsing-dot" style={{ color: stateColors.RS, background: stateColors.RS }} />
+          <span className="map-state-label">RS</span>
+          <span className="map-state-count">{schoolsByState.RS} atend.</span>
+        </div>
 
-        {/* MG (partial, top-right) */}
-        <path d="M220 10 C250 5,290 15,300 35 C310 55,305 75,285 80 C265 85,245 75,240 60 C235 45,225 30,220 10Z"
-          fill="#fef3e2" stroke="#f5d89a" strokeWidth="1.5" />
-        <circle cx={270} cy={45} r={10} fill={stateColors.MG} />
-        <text x={285} y={40} fill="#374151" fontSize="15" fontWeight="700">MG</text>
-        <text x={270} y={65} textAnchor="middle" fill="#6b7280" fontSize="10">{schoolsByState.MG} atend.</text>
+        {/* Paraná (PR) */}
+        <div className="map-dot-wrapper" style={{ top: '125px', right: '35px' }}>
+          <span className="map-pulsing-dot" style={{ color: stateColors.PR, background: stateColors.PR }} />
+          <span className="map-state-label">PR</span>
+          <span className="map-state-count">{schoolsByState.PR} atend.</span>
+        </div>
 
-        {/* PR */}
-        <path d="M60 115 C80 100,160 95,210 110 C240 118,260 140,255 165 C250 190,215 195,180 188 C145 182,70 170,50 148 C35 130,50 118,60 115Z"
-          fill="#e8f8e8" stroke="#a3d9a5" strokeWidth="1.5" />
-        <circle cx={165} cy={148} r={10} fill={stateColors.PR} />
-        <text x={180} y={143} fill="#374151" fontSize="15" fontWeight="700">PR</text>
-        <text x={165} y={170} textAnchor="middle" fill="#6b7280" fontSize="10">{schoolsByState.PR} atend.</text>
+        {/* São Paulo (SP) */}
+        <div className="map-dot-wrapper" style={{ top: '50px', right: '15px' }}>
+          <span className="map-pulsing-dot" style={{ color: stateColors.SP, background: stateColors.SP }} />
+          <span className="map-state-label">SP</span>
+          <span className="map-state-count">{schoolsByState.SP} atend.</span>
+        </div>
 
-        {/* RS */}
-        <path d="M30 210 C50 195,140 188,200 200 C240 210,260 240,250 275 C240 310,200 340,165 345 C130 350,80 335,55 310 C30 285,15 255,15 235 C15 215,25 210,30 210Z"
-          fill="#fde8e8" stroke="#f5a3a3" strokeWidth="1.5" />
-        <circle cx={145} cy={270} r={12} fill={stateColors.RS} />
-        <text x={165} y={265} fill="#374151" fontSize="15" fontWeight="700">RS</text>
-        <text x={145} y={295} textAnchor="middle" fill="#6b7280" fontSize="10">{schoolsByState.RS} atend.</text>
-      </svg>
+        {/* Minas Gerais (MG) */}
+        <div className="map-dot-wrapper" style={{ top: '15px', left: '35px' }}>
+          <span className="map-pulsing-dot" style={{ color: stateColors.MG, background: stateColors.MG }} />
+          <span className="map-state-label">MG</span>
+          <span className="map-state-count">{schoolsByState.MG} atend.</span>
+        </div>
+      </div>
       <div className="map-legend">
         <div><span className="map-dot" style={{ background: '#d1d5db' }} /> 0</div>
         <div><span className="map-dot" style={{ background: '#82BC00' }} /> 1-10</div>
@@ -370,7 +378,16 @@ function SchoolDetailCard({ school, onNavigate }) {
         </div>
       </div>
       <p className="sd-segments"><b>Segmentos:</b> {school.segments.join(' | ')}</p>
-      <p className="sd-responsible"><b>Responsável:</b> <span className="link-text">{school.responsible}</span></p>
+      <p className="sd-responsible">
+        <b>Responsável:</b>{' '}
+        <span 
+          className="link-text" 
+          onClick={() => onNavigate('participants')} 
+          style={{ cursor: 'pointer' }}
+        >
+          {school.responsible}
+        </span>
+      </p>
       <div className="sd-actions-title">PRINCIPAIS AÇÕES</div>
       <div className="sd-actions-tags">
         {school.actions.filter(a => a.count > 0).slice(0, 4).map(a => (
@@ -574,12 +591,12 @@ function ActionsPage() {
   );
 }
 
-function UnitsPage({ onSelect }) {
+function UnitsPage({ onSelect, schoolsList }) {
   return (
     <>
       <h2 className="page-section-title">Todas as Unidades</h2>
       <div className="units-grid">
-        {schools.map(s => (
+        {schoolsList.map(s => (
           <button key={s.id} className="unit-card" onClick={() => onSelect(s)}>
             <div className="unit-card-header">
               <div className="unit-card-icon"><School size={20} /></div>
@@ -641,7 +658,21 @@ function ParticipantsPage() {
   );
 }
 
-function AttendancePage() {
+function AttendancePage({ schoolsList }) {
+  const dynamicTotals = useMemo(() => {
+    let visits = 0, hours = 0, remote = 0, presencial = 0, participants = 0;
+    const states = new Set();
+    schoolsList.forEach(s => {
+      visits += s.visits;
+      hours += s.hours;
+      remote += s.remote;
+      presencial += s.presencial;
+      participants += s.participants;
+      states.add(s.state);
+    });
+    return { visits, hours, remote, presencial, participants, statesCount: states.size };
+  }, [schoolsList]);
+
   return (
     <>
       <h2 className="page-section-title">Atendimentos por Escola</h2>
@@ -651,7 +682,7 @@ function AttendancePage() {
             <tr><th>Escola</th><th>Estado</th><th>Atend.</th><th>Horas</th><th>Remoto</th><th>Presenc.</th><th>Partic.</th><th>Responsável</th></tr>
           </thead>
           <tbody>
-            {schools.map(s => (
+            {schoolsList.map(s => (
               <tr key={s.id}>
                 <td><b>{s.name}</b></td><td>{s.state}</td><td>{s.visits}</td>
                 <td>{fmtH(s.hours)}h</td><td>{s.remote}</td><td>{s.presencial}</td>
@@ -659,8 +690,8 @@ function AttendancePage() {
               </tr>
             ))}
             <tr className="table-total">
-              <td><b>Total</b></td><td>4 est.</td><td><b>164</b></td><td><b>186,5h</b></td>
-              <td><b>102</b></td><td><b>62</b></td><td><b>69</b></td><td>—</td>
+              <td><b>Total</b></td><td>{dynamicTotals.statesCount} est.</td><td><b>{dynamicTotals.visits}</b></td><td><b>{fmtH(dynamicTotals.hours)}h</b></td>
+              <td><b>{dynamicTotals.remote}</b></td><td><b>{dynamicTotals.presencial}</b></td><td><b>{dynamicTotals.participants}</b></td><td>—</td>
             </tr>
           </tbody>
         </table>
@@ -736,6 +767,26 @@ export default function App() {
   const [selectedSchool, setSelectedSchool] = useState(schools[0]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState('Janeiro a Junho / 2026');
+  const [stateFilter, setStateFilter] = useState('ALL');
+
+  const toggleDateFilter = () => {
+    const options = ['Janeiro a Junho / 2026', 'Todo o Período / 2026', 'Últimos 30 Dias'];
+    const idx = options.indexOf(dateFilter);
+    const nextIdx = (idx + 1) % options.length;
+    setDateFilter(options[nextIdx]);
+  };
+
+  const toggleStateFilter = () => {
+    const states = ['ALL', 'RS', 'SP', 'PR', 'MG'];
+    const idx = states.indexOf(stateFilter);
+    const nextIdx = (idx + 1) % states.length;
+    setStateFilter(states[nextIdx]);
+  };
+
+  const filteredSchools = useMemo(() => {
+    if (stateFilter === 'ALL') return schools;
+    return schools.filter(s => s.state === stateFilter);
+  }, [stateFilter]);
 
   const totals = useMemo(() => ({
     visits: 164, hours: 186.5, units: 12, participants: 69, remote: 102, presencial: 62,
@@ -757,11 +808,8 @@ export default function App() {
     <div className="layout">
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-        <div className="sidebar-logo">
-          <div className="zoom-logo">
-            <span className="zl-z">Z</span><span className="zl-o1">O</span><span className="zl-o2">O</span><span className="zl-m">M</span>
-          </div>
-          <small className="zoom-tagline">education for life</small>
+        <div className="sidebar-logo" onClick={() => navigate('overview')} style={{ cursor: 'pointer' }}>
+          <img src="/zoom-logo.png" alt="ZOOM Education for Life" className="sidebar-logo-img" />
         </div>
         <nav className="sidebar-nav">
           {sidebarItems.map(item => (
@@ -783,10 +831,10 @@ export default function App() {
             {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
           <div className="topbar-right">
-            <button className="topbar-btn date-btn"><Calendar size={16} /><span>{dateFilter}</span></button>
-            <button className="topbar-btn filter-btn"><SlidersHorizontal size={16} /><span>Filtros</span></button>
-            <button className="topbar-icon-btn notif-btn"><Bell size={18} /><span className="notif-badge">2</span></button>
-            <div className="avatar">CA</div>
+            <button className="topbar-btn date-btn" onClick={toggleDateFilter} title="Clique para alterar o período de dados"><Calendar size={16} /><span>{dateFilter}</span></button>
+            <button className="topbar-btn filter-btn" onClick={toggleStateFilter} title="Clique para filtrar por estado"><SlidersHorizontal size={16} /><span>Filtros: {stateFilter === 'ALL' ? 'Todos' : stateFilter}</span></button>
+            <button className="topbar-icon-btn notif-btn" onClick={() => alert('Você tem 2 novas notificações de atendimentos pendentes.')}><Bell size={18} /><span className="notif-badge">2</span></button>
+            <div className="avatar" onClick={() => navigate('participants')} style={{ cursor: 'pointer' }} title="Perfil de Usuário (Cláudio Amorim)">CA</div>
           </div>
         </header>
 
@@ -803,9 +851,9 @@ export default function App() {
         {page === 'overview' && <OverviewPage totals={totals} selectedSchool={selectedSchool} setSelectedSchool={setSelectedSchool} schoolsByState={schoolsByState} onNavigate={navigate} />}
         {page === 'evolution' && <EvolutionPage />}
         {page === 'actions' && <ActionsPage />}
-        {page === 'units' && <UnitsPage onSelect={selectSchoolAndNavigate} />}
+        {page === 'units' && <UnitsPage onSelect={selectSchoolAndNavigate} schoolsList={filteredSchools} />}
         {page === 'participants' && <ParticipantsPage />}
-        {page === 'attendance' && <AttendancePage />}
+        {page === 'attendance' && <AttendancePage schoolsList={filteredSchools} />}
         {page === 'reports' && <ReportsPage onNavigate={navigate} />}
         {page === 'export' && <ExportPage />}
 
@@ -813,9 +861,7 @@ export default function App() {
           <span><Calendar size={14} /> Dados atualizados em 23/06/2026 11:30</span>
           <span className="footer-source">
             Fonte: Sistema de Atendimento ZOOM
-            <span className="footer-zoom">
-              <b className="fz-z">Z</b><b className="fz-o1">O</b><b className="fz-o2">O</b><b className="fz-m">M</b>
-            </span>
+            <img src="/zoom-logo.png" alt="ZOOM" className="footer-logo-img" />
           </span>
         </footer>
       </main>
