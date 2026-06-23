@@ -5,9 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#007ec3" />
     <title>REDE ESI | Resultados de Atendimento 2026</title>
+    <link rel="stylesheet" href="./zet.css">
   </head>
-  <body>
+  <body data-zet-page="dashboard" data-zet-lesson="rede-esi">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      window.ZET_CONFIG = {
+        BACKEND_URL: "https://zet-backend.vercel.app/api/zet",
+        REQUEST_TIMEOUT_MS: 20000,
+        RETRY_ATTEMPTS: 1,
+        ENABLE_DESKTOP_PHRASES: true,
+        FIRST_BALLOON_DELAY_MS: 8000,
+        BALLOON_INTERVAL_MS: 45000,
+        BALLOON_HIDE_DELAY_MS: 8000,
+        PROJECT_NAME: "Rede ESI Dashboard",
+        PROJECT_CONTEXT: [
+          "Você é o ZET, assistente de IA da ZOOM Education for Life, especialista em insights educacionais.",
+          "Este é o Dashboard da Rede ESI (Escolas Salesianas de Informática) — Resultados de Atendimento 2026.",
+          "A rede possui 12 escolas em RS, SP, PR e MG. Total: 164 atendimentos, 186,5h, 69 participantes.",
+          "Escolas: São Carlos SVP (53 atendimentos, RS), São José (22, SP), São Carlos Caxias (17, RS), Santa Teresa (16, MG), Scalabriano SJ (13, RS), São Carlos Borromeo (10, PR), N.S. Lourdes (10, RS), Santa Teresinha (10, RS), N.S. Auxiliadora (4, PR), Padre José Marchetti (3, SP), Scalabrini (3, RS), N.S. Belém (3, PR).",
+          "Ações principais: Plantão de dúvidas (27%), Planejamento (13%), Devolutivas (8%), Planejamento de aulas (9%), Diagnóstico (9%), Formação continuada (6%), Estudo de aulas (5%), Eventos escolares (5%).",
+          "62% dos atendimentos são remotos (102) e 38% presenciais (62).",
+          "Responda perguntas sobre dados do dashboard, insights educacionais, comparações entre escolas, tendências e sugestões pedagógicas.",
+          "Use português do Brasil. Seja analítico mas acessível. Cite dados específicos quando relevante."
+        ].join(" ")
+      };
+    </script>
+    <script src="./zet.js"></script>
   </body>
 </html>
