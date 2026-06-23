@@ -901,7 +901,7 @@ export default function App() {
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-logo" onClick={() => navigate('overview')} style={{ cursor: 'pointer' }}>
-          <img src="./zoom-logo.png" alt="ZOOM Education for Life" className="sidebar-logo-img" />
+          <img src="./logo 30 anos colorido zoom.png" alt="ZOOM Education for Life" className="sidebar-logo-img" />
         </div>
         <nav className="sidebar-nav">
           {sidebarItems.map(item => (
@@ -959,7 +959,7 @@ export default function App() {
           <span><Calendar size={14} /> Dados atualizados em 23/06/2026 11:30</span>
           <span className="footer-source">
             Fonte: Sistema de Atendimento ZOOM
-            <img src="./zoom-logo.png" alt="ZOOM" className="footer-logo-img" />
+            <img src="./logo 30 anos colorido zoom.png" alt="ZOOM" className="footer-logo-img" />
           </span>
         </footer>
       </main>
