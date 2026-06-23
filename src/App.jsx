@@ -6,200 +6,10 @@ import {
   Menu, X, ChevronRight, ArrowUpRight, Filter
 } from 'lucide-react';
 
-/* ═══════════════════════════════════════════════════════════════
-   DATA — extracted from Rede_ESI_Resultados CSV (164 rows)
-   ═══════════════════════════════════════════════════════════════ */
-const schools = [
-  {
-    id: 'svp', name: 'São Carlos (SVP)', fullName: 'Colégio São Carlos (Santa Vitória Do Palmar)',
-    visits: 53, hours: 43.8, state: 'RS', remote: 50, presencial: 3, participants: 15,
-    segments: ['Fund. I (1º-2º)', 'Fund. I (3º-5º)', 'Fund. II (6º-9º)'],
-    responsible: 'Cláudio Amorim',
-    actions: [
-      { label: 'Plantão de dúvidas', count: 23 }, { label: 'Estudo de aulas', count: 6 },
-      { label: 'Planejamento de aulas', count: 6 }, { label: 'Devolutivas', count: 5 },
-      { label: 'Diagnóstico', count: 3 }, { label: 'Apropriação', count: 3 },
-      { label: 'Planejamento', count: 2 }, { label: 'Formação', count: 2 },
-      { label: 'Acompanhamento', count: 1 }, { label: 'Eventos', count: 0 },
-    ],
-    highlight: 'Maior volume de atendimentos da rede. Professores seguros e engajados. Assessorias passaram de semanais para quinzenais.',
-    attention: 'Tempo de aula de 45 min é insuficiente. Dificuldades com organização das maletas. Internet instável.',
-  },
-  {
-    id: 'sj', name: 'São José', fullName: 'Colégio São José',
-    visits: 22, hours: 21, state: 'SP', remote: 0, presencial: 22, participants: 8,
-    segments: ['Fund. I (1º-2º)', 'Fund. I (3º-5º)'],
-    responsible: 'Katia Fernanda Costa',
-    actions: [
-      { label: 'Formação continuada', count: 6 }, { label: 'Plantão de dúvidas', count: 5 },
-      { label: 'Acompanhamento', count: 4 }, { label: 'Planejamento', count: 3 },
-      { label: 'Planejamento de aulas', count: 2 }, { label: 'Devolutivas', count: 1 },
-      { label: 'Apropriação', count: 1 },
-    ],
-    highlight: 'Alto engajamento dos alunos. Professora com domínio e organização. Cronograma em dia.',
-    attention: 'Dificuldade com registros escritos nos anos iniciais. Gestão do tempo entre montagem e registro.',
-  },
-  {
-    id: 'caxias', name: 'São Carlos (Caxias)', fullName: 'Colégio São Carlos (Caxias Do Sul)',
-    visits: 17, hours: 21, state: 'RS', remote: 15, presencial: 2, participants: 4,
-    segments: ['Fund. I (1º-2º)', 'Fund. I (3º-5º)', 'Fund. II (6º-9º)'],
-    responsible: 'Cláudio Amorim',
-    actions: [
-      { label: 'Planejamento', count: 4 }, { label: 'Plantão de dúvidas', count: 3 },
-      { label: 'Apropriação', count: 3 }, { label: 'Devolutivas', count: 3 },
-      { label: 'Diagnóstico', count: 3 }, { label: 'Formação', count: 1 },
-    ],
-    highlight: 'Boa adaptação à metodologia. Alunos engajados. Professores testam atividades antes das aulas.',
-    attention: 'Firmware dos HUBs depende de rede aberta. Tempo de 50 min limitado para algumas atividades.',
-  },
-  {
-    id: 'st', name: 'Santa Teresa', fullName: 'Colégio Santa Teresa',
-    visits: 16, hours: 22.2, state: 'MG', remote: 1, presencial: 15, participants: 9,
-    segments: ['Fund. I (1º-2º)', 'Fund. I (3º-5º)', 'Fund. II (6º-9º)'],
-    responsible: 'Lucas Castro',
-    actions: [
-      { label: 'Eventos escolares', count: 8 }, { label: 'Apropriação', count: 2 },
-      { label: 'Estudo de aulas', count: 2 }, { label: 'Planejamento', count: 1 },
-      { label: 'Devolutivas', count: 1 }, { label: 'Diagnóstico', count: 1 },
-      { label: 'Formação', count: 1 },
-    ],
-    highlight: 'Forte presença em eventos. Feira confirmada para julho. Boa receptividade de novos professores.',
-    attention: 'Necessidade de planejamento prévio para participação da ZOOM nos eventos.',
-  },
-  {
-    id: 'ssj', name: 'Scalabriano S.J.', fullName: 'Colégio Scalabriano São José',
-    visits: 13, hours: 17.5, state: 'RS', remote: 11, presencial: 2, participants: 5,
-    segments: ['Fund. I (1º-2º)', 'Fund. I (3º-5º)'],
-    responsible: 'Cláudio Amorim',
-    actions: [
-      { label: 'Plantão de dúvidas', count: 3 }, { label: 'Planejamento', count: 3 },
-      { label: 'Diagnóstico', count: 2 }, { label: 'Apropriação', count: 2 },
-      { label: 'Devolutivas', count: 1 }, { label: 'Estudo de aulas', count: 1 },
-      { label: 'Formação', count: 1 },
-    ],
-    highlight: 'Retorno extremamente positivo. Equipe preparada. Formação pedagógica bem avaliada.',
-    attention: 'Tempo reduzido das aulas. Deslocamento das turmas. Necessidade de mais kits.',
-  },
-  {
-    id: 'borromeo', name: 'São Carlos Borromeo', fullName: 'Escola São Carlos Borromeo',
-    visits: 10, hours: 17, state: 'PR', remote: 6, presencial: 4, participants: 4,
-    segments: ['Fund. I (1º-2º)', 'Fund. I (3º-5º)', 'Fund. II (6º-9º)', 'ZMaker Lab'],
-    responsible: 'Helder Fontes',
-    actions: [
-      { label: 'Plantão de dúvidas', count: 4 }, { label: 'Planejamento de aulas', count: 4 },
-      { label: 'Planejamento', count: 1 }, { label: 'Apropriação', count: 1 },
-    ],
-    highlight: 'Receptividade superou expectativas. Alto engajamento. Laboratório Maker implantado.',
-    attention: 'Material com questões discursivas para alunos em alfabetização. Registro extenso impacta aula.',
-  },
-  {
-    id: 'lourdes', name: 'N.S. de Lourdes', fullName: 'Colégio Nossa Senhora De Lourdes',
-    visits: 10, hours: 19, state: 'RS', remote: 5, presencial: 5, participants: 8,
-    segments: ['Fund. I (1º-2º)', 'Fund. I (3º-5º)', 'Fund. II (6º-9º)'],
-    responsible: 'Cláudio Amorim',
-    actions: [
-      { label: 'Apropriação', count: 2 }, { label: 'Diagnóstico', count: 2 },
-      { label: 'Devolutivas', count: 2 }, { label: 'Acompanhamento', count: 1 },
-      { label: 'Formação', count: 1 }, { label: 'Planejamento', count: 1 },
-      { label: 'Planejamento de aulas', count: 1 },
-    ],
-    highlight: '1º ano de implantação com abordagem inovadora. Alto engajamento e protagonismo estudantil.',
-    attention: 'Tempo de aulas limitado (50 min). Escola deseja torneio interno de robótica para 2027.',
-  },
-  {
-    id: 'teresinha', name: 'Santa Teresinha', fullName: 'Colégio Santa Teresinha',
-    visits: 10, hours: 5, state: 'RS', remote: 4, presencial: 6, participants: 3,
-    segments: ['Fund. II (6º-9º)'],
-    responsible: 'Cláudio Amorim',
-    actions: [
-      { label: 'Plantão de dúvidas', count: 3 }, { label: 'Diagnóstico', count: 2 },
-      { label: 'Planej. ações pedag.', count: 1 }, { label: 'Formação', count: 1 },
-      { label: 'Planejamento de aulas', count: 1 }, { label: 'Planejamento', count: 1 },
-      { label: 'Devolutivas', count: 1 },
-    ],
-    highlight: 'Interesse em formações continuadas. Calendário alinhado com ações conjuntas.',
-    attention: 'Professora com dificuldades na gestão de turma e organização. Necessita apoio reforçado.',
-  },
-  {
-    id: 'auxiliadora', name: 'N.S. Auxiliadora', fullName: 'Colégio Nossa Senhora Auxiliadora',
-    visits: 4, hours: 4, state: 'PR', remote: 4, presencial: 0, participants: 2,
-    segments: ['Fund. II (6º-9º)'],
-    responsible: 'Guilherme Castilho',
-    actions: [
-      { label: 'Plantão de dúvidas', count: 2 }, { label: 'Planejamento de aulas', count: 1 },
-      { label: 'Planejamento', count: 1 },
-    ],
-    highlight: 'Plataforma considerada intuitiva. Oficinas Maker sugeridas. OBR como oportunidade.',
-    attention: 'Apenas 45 min semanais. Divisão de conteúdo entre montagem e programação necessária.',
-  },
-  {
-    id: 'marchetti', name: 'Pe. José Marchetti', fullName: 'Escola Padre José Marchetti',
-    visits: 3, hours: 7, state: 'SP', remote: 2, presencial: 1, participants: 4,
-    segments: ['Fund. I (1º-2º)', 'Fund. I (3º-5º)'],
-    responsible: 'Katia Fernanda Costa',
-    actions: [{ label: 'Planejamento', count: 3 }],
-    highlight: 'Avanços pedagógicos percebidos. Feira planejada.',
-    attention: 'Tempo reduzido. 5º ano não consegue concluir montagens no tempo disponível.',
-  },
-  {
-    id: 'scalabrini', name: 'Scalabrini', fullName: 'Colégio Scalabrini',
-    visits: 3, hours: 6, state: 'RS', remote: 2, presencial: 1, participants: 7,
-    segments: ['Geral'],
-    responsible: 'Cláudio Amorim',
-    actions: [{ label: 'Diagnóstico', count: 2 }, { label: 'Planejamento', count: 1 }],
-    highlight: 'Fase de consolidação em 2026. Educação tecnológica como diferencial competitivo.',
-    attention: 'Início de implantação — requer acompanhamento próximo para fortalecimento em 2027.',
-  },
-  {
-    id: 'belem', name: 'N.S. de Belém', fullName: 'Colégio Nossa Senhora De Belém',
-    visits: 3, hours: 3, state: 'PR', remote: 2, presencial: 1, participants: 2,
-    segments: ['Fund. II (6º-9º)'],
-    responsible: 'Guilherme Castilho',
-    actions: [
-      { label: 'Planejamento', count: 1 }, { label: 'Planejamento de aulas', count: 1 },
-      { label: 'Devolutivas', count: 1 },
-    ],
-    highlight: 'Feira interna com famílias em julho. Estação de Marketing ZOOM. Uso expandido do Z-Maker.',
-    attention: 'Gestão do tempo em aulas de 45 min. Login único e organização prévia dos kits.',
-  },
-];
-
-const actionDistribution = [
-  { label: 'Plantão de dúvidas', count: 44, color: '#005B96' },
-  { label: 'Planejamento', count: 21, color: '#82BC00' },
-  { label: 'Planejamento de aulas', count: 15, color: '#007EC3' },
-  { label: 'Diagnóstico', count: 14, color: '#EA5B0C' },
-  { label: 'Devolutivas e Relatórios', count: 13, color: '#EDAA00' },
-  { label: 'Formação continuada', count: 10, color: '#00A676' },
-  { label: 'Estudo de aulas', count: 9, color: '#4682B4' },
-  { label: 'Eventos escolares', count: 8, color: '#B8860B' },
-  { label: 'Devolutiva do Acomp.', count: 7, color: '#9370DB' },
-  { label: 'Apropriação', count: 13, color: '#6B8E23' },
-  { label: 'Acompanhamento', count: 5, color: '#CD853F' },
-  { label: 'Planej. ações pedag.', count: 5, color: '#708090' },
-];
-
-const monthly = [
-  { month: 'Jan', remote: 0, presencial: 3 },
-  { month: 'Fev', remote: 19, presencial: 24 },
-  { month: 'Mar', remote: 6, presencial: 11 },
-  { month: 'Abr', remote: 22, presencial: 5 },
-  { month: 'Mai', remote: 41, presencial: 17 },
-  { month: 'Jun', remote: 14, presencial: 0 },
-];
-
-const sidebarItems = [
-  { icon: Home, label: 'Visão Geral', page: 'overview' },
-  { icon: TrendingUp, label: 'Evolução', page: 'evolution' },
-  { icon: Zap, label: 'Ações', page: 'actions' },
-  { icon: Building2, label: 'Unidades', page: 'units' },
-  { icon: Users, label: 'Participantes', page: 'participants' },
-  { icon: HandHelping, label: 'Atendimentos', page: 'attendance' },
-  { icon: FileText, label: 'Relatórios', page: 'reports' },
-  { icon: Download, label: 'Exportar', page: 'export' },
-];
-
-const TOTAL = 164;
+/* DATA IMPORT */
+import { schools, actionDistribution, monthly, TOTAL, fetchSheetData } from './dataStore';
+import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 const fmtPct = (v) => Math.round((v / TOTAL) * 100);
 const fmtH = (v) => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 
@@ -854,8 +664,49 @@ function SchoolModal({ school, onClose, onNavigateToOverview }) {
    ═══════════════════════════════════════════════════════════════ */
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [dataKey, setDataKey] = useState(0);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      await fetchSheetData();
+    } catch (e) {
+      console.error('Error fetching data:', e);
+    }
+    setSelectedSchool(schools[0] || null);
+    setIsLoading(false);
+    setDataKey(prev => prev + 1);
+  };
+
+  useEffect(() => {
+    loadData();
+    window.refreshDashboardData = () => loadData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="layout" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], rotate: [0, 360] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <img src="./logo 30 anos colorido zoom.png" alt="ZOOM" width="150" />
+        </motion.div>
+        <motion.h2
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse' }}
+          style={{ marginTop: 20, color: '#007EC3' }}
+        >
+          Sincronizando dados da Rede ESI...
+        </motion.h2>
+      </div>
+    );
+  }
+
   const [page, setPage] = useState('overview');
-  const [selectedSchool, setSelectedSchool] = useState(schools[0]);
+  const [selectedSchool, setSelectedSchool] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState('Janeiro a Junho / 2026');
   const [stateFilter, setStateFilter] = useState('ALL');
@@ -878,17 +729,25 @@ export default function App() {
   const filteredSchools = useMemo(() => {
     if (stateFilter === 'ALL') return schools;
     return schools.filter(s => s.state === stateFilter);
-  }, [stateFilter]);
+  }, [stateFilter, dataKey]);
 
-  const totals = useMemo(() => ({
-    visits: 164, hours: 186.5, units: 12, participants: 69, remote: 102, presencial: 62,
-  }), []);
+  const totals = useMemo(() => {
+    let visits = 0, hours = 0, remote = 0, presencial = 0, participants = 0;
+    schools.forEach(s => {
+      visits += s.visits;
+      hours += s.hours;
+      remote += s.remote;
+      presencial += s.presencial;
+      participants += s.participants;
+    });
+    return { visits, hours, units: schools.length, participants, remote, presencial };
+  }, [dataKey]);
 
   const schoolsByState = useMemo(() => {
     const map = { RS: 0, PR: 0, SP: 0, MG: 0 };
     schools.forEach(s => { map[s.state] = (map[s.state] || 0) + s.visits; });
     return map;
-  }, []);
+  }, [dataKey]);
 
   const navigate = (p) => { setPage(p); setSidebarOpen(false); window.scrollTo(0, 0); };
 
