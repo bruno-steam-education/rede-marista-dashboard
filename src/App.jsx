@@ -17,7 +17,7 @@ const fmtH = (v) => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
    ═══════════════════════════════════════════════════════════════ */
 
 function DonutChart({ data, size = 150 }) {
-  const total = data.reduce((s, a) => s + a.count, 0);
+  const total = data.reduce((s, a) => s + a.count, 0) || 1;
   let cum = 0;
   const r = 42, cx = 50, cy = 50;
   const slices = data.filter(a => a.count > 0).map(a => {
@@ -56,7 +56,7 @@ function DonutChart({ data, size = 150 }) {
 }
 
 function LineChart({ data }) {
-  const maxVal = Math.max(...data.map(m => Math.max(m.remote, m.presencial))) + 5;
+  const maxVal = data.length ? Math.max(...data.map(m => Math.max(m.remote, m.presencial))) + 5 : 10;
   const rounded = Math.ceil(maxVal / 10) * 10;
   const w = 460, h = 210, p = { t: 20, r: 20, b: 30, l: 38 };
   const cw = w - p.l - p.r, ch = h - p.t - p.b;
@@ -173,6 +173,7 @@ function SouthBrazilMap({ schoolsByState }) {
 }
 
 function SchoolDetailCard({ school, onNavigate }) {
+  if (!school) return <div className="school-detail-card"><p>Nenhuma escola selecionada ou dados indisponíveis.</p></div>;
   return (
     <div className="school-detail-card">
       <div className="sd-header">
@@ -244,29 +245,29 @@ function OverviewPage({ totals, selectedSchool, setSelectedSchool, schoolsByStat
       <section className="kpi-row">
         <div className="kpi-card kpi-blue">
           <div className="kpi-icon"><Users size={24} /></div>
-          <div className="kpi-value">164</div>
+          <div className="kpi-value">{totals.visits}</div>
           <div className="kpi-label">ATENDIMENTOS REALIZADOS</div>
         </div>
         <div className="kpi-card kpi-yellow">
           <div className="kpi-icon"><Clock size={24} /></div>
-          <div className="kpi-value">186,5h</div>
+          <div className="kpi-value">{fmtH(totals.hours)}h</div>
           <div className="kpi-label">HORAS DE ATENDIMENTO</div>
         </div>
         <div className="kpi-card kpi-green">
           <div className="kpi-icon"><Building2 size={24} /></div>
-          <div className="kpi-value">12</div>
+          <div className="kpi-value">{totals.units}</div>
           <div className="kpi-label">UNIDADES ATENDIDAS</div>
         </div>
         <div className="kpi-card kpi-orange">
           <div className="kpi-icon"><Users size={24} /></div>
-          <div className="kpi-value">69</div>
+          <div className="kpi-value">{totals.participants}</div>
           <div className="kpi-label">PARTICIPANTES IMPACTADOS</div>
         </div>
         <div className="kpi-card kpi-modality">
           <div className="kpi-modality-title">REMOTO VS PRESENCIAL</div>
           <div className="modality-row">
-            <ModalityCircle pct={62} count={102} label="Remotos" color="#007EC3" />
-            <ModalityCircle pct={38} count={62} label="Presenciais" color="#EA5B0C" />
+            <ModalityCircle pct={totals.visits ? Math.round((totals.remote/totals.visits)*100) : 0} count={totals.remote} label="Remotos" color="#007EC3" />
+            <ModalityCircle pct={totals.visits ? Math.round((totals.presencial/totals.visits)*100) : 0} count={totals.presencial} label="Presenciais" color="#EA5B0C" />
           </div>
         </div>
       </section>
@@ -289,11 +290,11 @@ function OverviewPage({ totals, selectedSchool, setSelectedSchool, schoolsByStat
           <div className="highlights-section">
             <div className="highlight-box highlight-green">
               <div className="highlight-icon"><CheckCircle size={20} /></div>
-              <div><strong>DESTAQUES</strong><p>{selectedSchool.highlight}</p></div>
+              <div><strong>DESTAQUES</strong><p>{selectedSchool?.highlight}</p></div>
             </div>
             <div className="highlight-box highlight-red">
               <div className="highlight-icon"><AlertCircle size={20} /></div>
-              <div><strong>PONTOS DE ATENÇÃO</strong><p>{selectedSchool.attention}</p></div>
+              <div><strong>PONTOS DE ATENÇÃO</strong><p>{selectedSchool?.attention}</p></div>
             </div>
           </div>
         </div>
