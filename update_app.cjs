@@ -1,77 +1,129 @@
 const fs = require('fs');
 let content = fs.readFileSync('src/App.jsx', 'utf8');
 
-content = content.replace(/\/\* ═══════════════════════════════════════════════════════════════\r?\n   DATA — extracted from Rede_ESI_Resultados CSV \(164 rows\)\r?\n   ═══════════════════════════════════════════════════════════════ \*\//, '/* DATA IMPORT */');
+// Update imports
+content = content.replace(/import \{ schools, actionDistribution, monthly, TOTAL, fetchSheetData \} from '\.\/dataStore';/, `import { schools, actionDistribution, monthly, TOTAL, fetchSheetData, loadLocalCache } from './dataStore';`);
+content = content.replace(/import \{ useEffect \} from 'react';/, `import { useEffect, useState, useMemo } from 'react';`);
 
-content = content.replace(/const schools = \[[\s\S]*?const TOTAL = 164;/m, `import { schools, actionDistribution, monthly, TOTAL, fetchSheetData } from './dataStore';\nimport { motion } from 'framer-motion';\nimport { useEffect } from 'react';`);
+// Add UpdateProgressModal component
+const updateProgressModalCode = `
+function UpdateProgressModal({ isOpen, step, progress, message }) {
+  if (!isOpen) return null;
+  return (
+    <div className="update-modal-overlay" style={{
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex',
+      justifyContent: 'center', alignItems: 'center', zIndex: 9999
+    }}>
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="update-modal-content" style={{
+          background: 'white', padding: '30px', borderRadius: '12px',
+          width: '400px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+        }}>
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} style={{ display: 'inline-block', marginBottom: 20 }}>
+          <img src="./logo 30 anos colorido zoom.png" alt="ZOOM" width="80" />
+        </motion.div>
+        <h3 style={{ color: '#007EC3', marginBottom: 15, fontSize: '1.2rem' }}>{message}</h3>
+        
+        <div style={{ background: '#e5e7eb', height: '10px', borderRadius: '5px', overflow: 'hidden', marginBottom: '10px' }}>
+          <motion.div 
+            initial={{ width: 0 }}
+            animate={{ width: \`\${progress}%\` }}
+            transition={{ duration: 0.5 }}
+            style={{ background: '#82BC00', height: '100%' }}
+          />
+        </div>
+        <p style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: 'bold' }}>{Math.round(progress)}%</p>
+      </motion.div>
+    </div>
+  );
+}
 
-content = content.replace(/export default function App\(\) \{/, `export default function App() {
-  const [isLoading, setIsLoading] = useState(true);
+/* ═══════════════════════════════════════════════════════════════
+   MAIN APP
+   ═══════════════════════════════════════════════════════════════ */`;
+
+content = content.replace(/\/\* ═══════════════════════════════════════════════════════════════\r?\n   MAIN APP\r?\n   ═══════════════════════════════════════════════════════════════ \*\//, updateProgressModalCode);
+
+// Replace App component
+content = content.replace(/export default function App\(\) \{[\s\S]*?const toggleDateFilter = \(\) => \{/m, `export default function App() {
   const [dataKey, setDataKey] = useState(0);
+  const [updateState, setUpdateState] = useState({ isOpen: false, step: 0, progress: 0, message: '' });
+  const [selectedSchool, setSelectedSchool] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dateFilter, setDateFilter] = useState('Janeiro a Junho / 2026');
+  const [stateFilter, setStateFilter] = useState('ALL');
+  const [selectedSchoolModal, setSelectedSchoolModal] = useState(null);
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const triggerUpdate = async () => {
+    if (updateState.isOpen) return;
+    
+    setUpdateState({ isOpen: true, step: 1, progress: 10, message: 'Verificando se há atualizações...' });
+    
+    // Simulate initial progress
+    let prog = 10;
+    const interval = setInterval(() => {
+      prog += 5;
+      if (prog <= 40) setUpdateState(s => ({ ...s, progress: prog }));
+    }, 200);
+
     try {
-      await fetchSheetData();
+      const res = await fetchSheetData();
+      clearInterval(interval);
+      
+      setUpdateState(s => ({ ...s, step: 2, progress: 50, message: 'Comparando dados...' }));
+      
+      await new Promise(r => setTimeout(r, 800));
+
+      if (res.hasChanges) {
+        setUpdateState({ isOpen: true, step: 3, progress: 70, message: 'Novas alterações encontradas!' });
+      } else {
+        setUpdateState({ isOpen: true, step: 3, progress: 70, message: 'Nenhuma alteração. Base já atualizada.' });
+      }
+      
+      await new Promise(r => setTimeout(r, 1000));
+      
+      setUpdateState(s => ({ ...s, step: 4, progress: 90, message: 'Aplicando no Dashboard...' }));
+      
+      await new Promise(r => setTimeout(r, 800));
+      
+      setDataKey(prev => prev + 1);
+      if (!selectedSchool && schools.length > 0) setSelectedSchool(schools[0]);
+      
+      setUpdateState(s => ({ ...s, progress: 100, message: 'Concluído!' }));
+      await new Promise(r => setTimeout(r, 500));
+
     } catch (e) {
-      console.error('Error fetching data:', e);
+      clearInterval(interval);
+      console.error(e);
+      setUpdateState(s => ({ ...s, message: 'Erro ao buscar dados.' }));
+      await new Promise(r => setTimeout(r, 2000));
     }
-    setSelectedSchool(schools[0] || null);
-    setIsLoading(false);
-    setDataKey(prev => prev + 1);
+    
+    setUpdateState({ isOpen: false, step: 0, progress: 0, message: '' });
   };
 
   useEffect(() => {
-    loadData();
-    window.refreshDashboardData = () => loadData();
+    // Tenta carregar do cache instantaneamente
+    const hasCache = loadLocalCache();
+    if (hasCache) {
+      setDataKey(prev => prev + 1);
+      setSelectedSchool(schools[0] || null);
+    } else {
+      // Se não tiver cache, força o update visual na primeira vez
+      triggerUpdate();
+    }
+    
+    window.refreshDashboardData = triggerUpdate;
+    window.triggerUpdate = triggerUpdate;
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="layout" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
-        <motion.div
-          animate={{ scale: [1, 1.2, 1], rotate: [0, 360] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <img src="./logo 30 anos colorido zoom.png" alt="ZOOM" width="150" />
-        </motion.div>
-        <motion.h2
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse' }}
-          style={{ marginTop: 20, color: '#007EC3' }}
-        >
-          Sincronizando dados da Rede ESI...
-        </motion.h2>
-      </div>
-    );
-  }
-`);
+  const toggleDateFilter = () => {`);
 
-content = content.replace(/const \[selectedSchool, setSelectedSchool\] = useState\(schools\[0\]\);/, 'const [selectedSchool, setSelectedSchool] = useState(null);');
-
-content = content.replace(/const totals = useMemo\(\(\) => \(\{\r?\n\s*visits: 164, hours: 186\.5, units: 12, participants: 69, remote: 102, presencial: 62,\r?\n\s*\}\), \[\]\);/, `const totals = useMemo(() => {
-    let visits = 0, hours = 0, remote = 0, presencial = 0, participants = 0;
-    schools.forEach(s => {
-      visits += s.visits;
-      hours += s.hours;
-      remote += s.remote;
-      presencial += s.presencial;
-      participants += s.participants;
-    });
-    return { visits, hours, units: schools.length, participants, remote, presencial };
-  }, [dataKey]);`);
-
-content = content.replace(/const schoolsByState = useMemo\(\(\) => \{\r?\n\s*const map = \{ RS: 0, PR: 0, SP: 0, MG: 0 \};\r?\n\s*schools\.forEach\(s => \{ map\[s\.state\] = \(map\[s\.state\] \|\| 0\) \+ s\.visits; \}\);\r?\n\s*return map;\r?\n\s*\}, \[\]\);/, `const schoolsByState = useMemo(() => {
-    const map = { RS: 0, PR: 0, SP: 0, MG: 0 };
-    schools.forEach(s => { map[s.state] = (map[s.state] || 0) + s.visits; });
-    return map;
-  }, [dataKey]);`);
-
-content = content.replace(/const filteredSchools = useMemo\(\(\) => \{\r?\n\s*if \(stateFilter === 'ALL'\) return schools;\r?\n\s*return schools\.filter\(s => s\.state === stateFilter\);\r?\n\s*\}, \[stateFilter\]\);/, `const filteredSchools = useMemo(() => {
-    if (stateFilter === 'ALL') return schools;
-    return schools.filter(s => s.state === stateFilter);
-  }, [stateFilter, dataKey]);`);
+// Insert UpdateProgressModal into layout
+content = content.replace(/<div className="layout">/, `<div className="layout">\n      <UpdateProgressModal {...updateState} />`);
 
 fs.writeFileSync('src/App.jsx', content);
 console.log('App.jsx updated!');

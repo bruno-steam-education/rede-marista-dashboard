@@ -7,6 +7,23 @@ export let TOTAL = 0;
 
 const COLORS = ['#005B96', '#82BC00', '#007EC3', '#EA5B0C', '#EDAA00', '#00A676', '#4682B4', '#B8860B', '#9370DB', '#6B8E23', '#2F4F4F', '#DC143C'];
 
+export const loadLocalCache = () => {
+  try {
+    const cached = localStorage.getItem('redeEsiData');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      schools = parsed.schools;
+      actionDistribution = parsed.actionDistribution;
+      monthly = parsed.monthly;
+      TOTAL = parsed.TOTAL;
+      return true;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  return false;
+};
+
 export const fetchSheetData = () => {
   return new Promise((resolve, reject) => {
     Papa.parse('https://docs.google.com/spreadsheets/d/1_upLb6WdHxg39MNvCyAeJ-H6ZLfvBqYpW_8qvpX1wDQ/gviz/tq?tqx=out:csv', {
@@ -14,8 +31,10 @@ export const fetchSheetData = () => {
       header: true,
       complete: (results) => {
         try {
+          const oldTotal = TOTAL;
           processData(results.data);
-          resolve();
+          localStorage.setItem('redeEsiData', JSON.stringify({ schools, actionDistribution, monthly, TOTAL }));
+          resolve({ hasChanges: oldTotal !== TOTAL || oldTotal === 0, newTotal: TOTAL });
         } catch (e) {
           reject(e);
         }
