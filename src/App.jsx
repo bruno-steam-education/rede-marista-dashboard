@@ -1,367 +1,553 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
-  Activity,
-  BarChart3,
-  Clock3,
-  GraduationCap,
-  MapPin,
-  MousePointer2,
-  Play,
-  RotateCcw,
-  School,
-  Sparkles,
-  Users,
+  Home, TrendingUp, Zap, Building2, Users, HandHelping,
+  FileText, Download, Info, Calendar, SlidersHorizontal,
+  Bell, Clock, MapPin, CheckCircle, AlertCircle, School,
+  Menu, X
 } from 'lucide-react';
 
 const schools = [
   {
-    name: 'S. Carlos (SVP)',
-    short: 'SVP',
-    state: 'RS',
-    visits: 53,
-    hours: 43.8,
-    remote: 34,
-    presencial: 19,
-    participants: 18,
-    responsible: 'Claudio Amorim',
-    segments: 'Fund. I e Fund. II',
-    actions: { plantao: 23, planejamento: 8, formacao: 2, diagnostico: 3, devolutiva: 8, evento: 0, apropriacao: 3, acompanhamento: 0, estudo: 6 },
-    highlight: 'Maior volume de atendimentos da rede, professores seguros e engajados.',
-    attention: 'Tempo de aula e infraestrutura de internet pedem acompanhamento constante.',
+    name: 'São Carlos (SVP)', visits: 53, hours: 43.8, state: 'RS',
+    segments: 'Fund. I (1º-2º) | Fund. I (3º-5º) | Fund. II (6º-9º)',
+    responsible: 'Cláudio Amorim',
+    actions: [
+      { label: 'Plantão de dúvidas', count: 23 },
+      { label: 'Estudo de aulas', count: 6 },
+      { label: 'Planejamento', count: 6 },
+      { label: 'Devolutivas', count: 5 },
+    ],
+    highlight: 'Maior volume de atendimentos da rede. Professores seguros e engajados. Assessorias passaram de semanais para quinzenais.',
+    attention: 'Tempo de aula de 45 min é insuficiente. Dificuldades com organização das maletas. Internet instável.',
   },
   {
-    name: 'Sao Jose',
-    short: 'SJ',
-    state: 'SP',
-    visits: 22,
-    hours: 27.4,
-    remote: 12,
-    presencial: 10,
-    participants: 11,
-    responsible: 'Time ZOOM',
-    segments: 'Fund. I e Fund. II',
-    actions: { plantao: 5, planejamento: 5, formacao: 6, diagnostico: 0, devolutiva: 2, evento: 0, apropriacao: 0, acompanhamento: 4, estudo: 0 },
-    highlight: 'Boa distribuicao entre planejamento, formacao e acompanhamento.',
-    attention: 'Manter devolutivas objetivas para consolidar rotina pedagogica.',
+    name: 'São José', visits: 22, hours: 21, state: 'RS',
+    segments: 'Fund. I (1º-2º) | Fund. I (3º-5º)',
+    responsible: 'Ana Conceição Sales',
+    actions: [
+      { label: 'Formação continuada', count: 6 },
+      { label: 'Plantão de dúvidas', count: 5 },
+      { label: 'Acompanhamento', count: 4 },
+      { label: 'Planejamento', count: 3 },
+    ],
+    highlight: 'Alto engajamento dos alunos. Professora com domínio e organização. Cronograma em dia.',
+    attention: 'Dificuldade com registros escritos nos anos iniciais. Gestão do tempo entre montagem e registro.',
   },
   {
-    name: 'S. Carlos (Caxias)',
-    short: 'CAX',
-    state: 'RS',
-    visits: 17,
-    hours: 21,
-    remote: 11,
-    presencial: 6,
-    participants: 8,
-    responsible: 'Claudio Amorim',
-    segments: 'Fund. I e Fund. II',
-    actions: { plantao: 3, planejamento: 5, formacao: 0, diagnostico: 3, devolutiva: 3, evento: 0, apropriacao: 3, acompanhamento: 0, estudo: 0 },
-    highlight: 'Boa adaptacao a metodologia, com professores testando atividades.',
-    attention: 'Firmware dos HUBs depende de rede aberta e tempo de aula limitado.',
+    name: 'São Carlos (Caxias)', visits: 17, hours: 21, state: 'RS',
+    segments: 'Fund. I (1º-2º) | Fund. I (3º-5º) | Fund. II (6º-9º)',
+    responsible: 'Cláudio Amorim',
+    actions: [
+      { label: 'Planejamento', count: 4 },
+      { label: 'Apropriação', count: 3 },
+      { label: 'Plantão de dúvidas', count: 3 },
+      { label: 'Devolutivas', count: 3 },
+    ],
+    highlight: 'Boa adaptação à metodologia. Alunos engajados. Professores testam atividades antes das aulas.',
+    attention: 'Firmware dos HUBs depende de rede aberta. Tempo de 50 min limitado para algumas atividades.',
   },
   {
-    name: 'Santa Teresa',
-    short: 'ST',
-    state: 'RS',
-    visits: 16,
-    hours: 22.2,
-    remote: 8,
-    presencial: 8,
-    participants: 9,
+    name: 'Santa Teresa', visits: 16, hours: 22.2, state: 'RS',
+    segments: 'Fund. I (1º-2º) | Fund. I (3º-5º) | Fund. II (6º-9º)',
     responsible: 'Rafael Zanetoni',
-    segments: 'Fund. I e Fund. II',
-    actions: { plantao: 1, planejamento: 2, formacao: 0, diagnostico: 0, devolutiva: 1, evento: 8, apropriacao: 2, acompanhamento: 0, estudo: 2 },
-    highlight: 'Forte presenca em eventos e boa receptividade de novos professores.',
-    attention: 'Planejamento previo para participacao da ZOOM nos eventos escolares.',
+    actions: [
+      { label: 'Eventos escolares', count: 8 },
+      { label: 'Apropriação', count: 2 },
+      { label: 'Estudo de aulas', count: 2 },
+      { label: 'Planejamento', count: 2 },
+    ],
+    highlight: 'Forte presença em eventos. Feira confirmada para julho. Boa receptividade de novos professores.',
+    attention: 'Necessidade de planejamento prévio para participação da ZOOM nos eventos.',
   },
   {
-    name: 'Scalabriano S.J.',
-    short: 'SSJ',
-    state: 'PR',
-    visits: 13,
-    hours: 16.5,
-    remote: 8,
-    presencial: 5,
-    participants: 6,
-    responsible: 'Time ZOOM',
-    segments: 'Fund. I e Fund. II',
-    actions: { plantao: 3, planejamento: 4, formacao: 0, diagnostico: 2, devolutiva: 2, evento: 0, apropriacao: 2, acompanhamento: 0, estudo: 0 },
-    highlight: 'Ciclo consistente de planejamento e devolutivas.',
-    attention: 'Aprofundar diagnosticos por turma para acelerar proximas acoes.',
+    name: 'Scalabriano S.J.', visits: 13, hours: 17.5, state: 'PR',
+    segments: 'Fund. I (1º-2º) | Fund. I (3º-5º)',
+    responsible: 'Cláudio Amorim',
+    actions: [
+      { label: 'Plantão de dúvidas', count: 3 },
+      { label: 'Planejamento', count: 3 },
+      { label: 'Diagnóstico', count: 2 },
+      { label: 'Apropriação', count: 2 },
+    ],
+    highlight: 'Retorno extremamente positivo. Equipe preparada. Formação pedagógica bem avaliada.',
+    attention: 'Tempo reduzido das aulas. Deslocamento das turmas. Necessidade de mais kits.',
   },
   {
-    name: 'Outras unidades',
-    short: 'OUT',
-    state: 'RS/PR/SP',
-    visits: 43,
-    hours: 55.6,
-    remote: 29,
-    presencial: 14,
-    participants: 17,
-    responsible: 'Equipe ZOOM',
-    segments: 'Rede ESI',
-    actions: { plantao: 9, planejamento: 18, formacao: 2, diagnostico: 8, devolutiva: 4, evento: 0, apropriacao: 3, acompanhamento: 1, estudo: 1 },
-    highlight: 'Atendimentos distribuidos ampliam capilaridade da rede.',
-    attention: 'Priorizar escolas com baixo volume para equilibrar impacto.',
+    name: 'São Carlos Borromeo', visits: 10, hours: 17, state: 'RS',
+    segments: 'Fund. I (1º-2º) | Fund. I (3º-5º) | Fund. II (6º-9º) | ZMaker Lab',
+    responsible: 'Amanda Iansen / Roque Junior',
+    actions: [
+      { label: 'Plantão de dúvidas', count: 4 },
+      { label: 'Planejamento de aulas', count: 4 },
+      { label: 'Apropriação', count: 1 },
+    ],
+    highlight: 'Receptividade superou expectativas. Alto engajamento. Laboratório Maker implantado.',
+    attention: 'Material com questões discursivas para alunos em alfabetização. Registro extenso impacta aula.',
   },
+  {
+    name: 'N.S. de Lourdes', visits: 10, hours: 19, state: 'RS',
+    segments: 'Fund. I (1º-2º) | Fund. I (3º-5º) | Fund. II (6º-9º)',
+    responsible: 'Cláudio Amorim',
+    actions: [
+      { label: 'Diagnóstico', count: 2 },
+      { label: 'Devolutivas', count: 2 },
+      { label: 'Apropriação', count: 2 },
+      { label: 'Formação', count: 1 },
+    ],
+    highlight: '1º ano de implantação com abordagem inovadora. Alto engajamento e protagonismo estudantil.',
+    attention: 'Tempo de aulas limitado (50 min). Escola deseja torneio interno de robótica para 2027.',
+  },
+  {
+    name: 'Santa Teresinha', visits: 10, hours: 5, state: 'RS',
+    segments: 'Fund. II (6º-9º)',
+    responsible: 'Cláudio Amorim',
+    actions: [
+      { label: 'Plantão de dúvidas', count: 3 },
+      { label: 'Diagnóstico', count: 2 },
+      { label: 'Formação', count: 1 },
+      { label: 'Planejamento', count: 1 },
+    ],
+    highlight: 'Interesse em formações continuadas. Calendário alinhado com ações conjuntas.',
+    attention: 'Professora com dificuldades na gestão de turma e organização. Necessita apoio reforçado.',
+  },
+  {
+    name: 'N.S. Auxiliadora', visits: 4, hours: 4, state: 'RS',
+    segments: 'Fund. II (6º-9º)',
+    responsible: 'Cláudio Amorim',
+    actions: [
+      { label: 'Plantão de dúvidas', count: 2 },
+      { label: 'Planejamento de aulas', count: 1 },
+      { label: 'Planejamento', count: 1 },
+    ],
+    highlight: 'Plataforma considerada intuitiva. Oficinas Maker sugeridas. OBR como oportunidade.',
+    attention: 'Apenas 45 min semanais. Divisão de conteúdo entre montagem e programação necessária.',
+  },
+  {
+    name: 'Padre José Marchetti', visits: 3, hours: 7, state: 'SP',
+    segments: 'Fund. I (1º-2º) | Fund. I (3º-5º)',
+    responsible: 'Ana Conceição Sales',
+    actions: [{ label: 'Planejamento', count: 3 }],
+    highlight: 'Avanços pedagógicos percebidos. Feira planejada.',
+    attention: 'Tempo reduzido. 5º ano não consegue concluir montagens no tempo disponível.',
+  },
+  {
+    name: 'Scalabrini', visits: 3, hours: 6, state: 'RS',
+    segments: 'Geral',
+    responsible: 'Cláudio Amorim',
+    actions: [
+      { label: 'Diagnóstico', count: 2 },
+      { label: 'Planejamento', count: 1 },
+    ],
+    highlight: 'Fase de consolidação em 2026. Educação tecnológica como diferencial competitivo.',
+    attention: 'Início de implantação — requer acompanhamento próximo para fortalecimento em 2027.',
+  },
+  {
+    name: 'N.S. de Belém', visits: 3, hours: 3, state: 'RS',
+    segments: 'Fund. II (6º-9º)',
+    responsible: 'Cláudio Amorim',
+    actions: [
+      { label: 'Planejamento', count: 1 },
+      { label: 'Planejamento de aulas', count: 1 },
+      { label: 'Devolutiva', count: 1 },
+    ],
+    highlight: 'Feira interna com famílias em julho. Estação de Marketing ZOOM. Uso expandido do Z-Maker.',
+    attention: 'Gestão do tempo em aulas de 45 min. Login único e organização prévia dos kits.',
+  },
+];
+
+const actionDistribution = [
+  { label: 'Plantão de dúvidas', pct: 27, color: '#005B96' },
+  { label: 'Planejamento', pct: 13, color: '#82BC00' },
+  { label: 'Devolutivas e Relat.', pct: 12, color: '#EDAA00' },
+  { label: 'Planej. de aulas', pct: 8, color: '#007EC3' },
+  { label: 'Diagnóstico', pct: 7, color: '#EA5B0C' },
+  { label: 'Apropriação', pct: 6, color: '#00A676' },
+  { label: 'Formação continuada', pct: 5, color: '#6B8E23' },
+  { label: 'Estudo de aulas', pct: 5, color: '#4682B4' },
+  { label: 'Eventos escolares', pct: 4, color: '#B8860B' },
+  { label: 'Acompanhamento', pct: 3, color: '#9370DB' },
+  { label: 'Planej. ações pedag.', pct: 0, color: '#CD853F' },
 ];
 
 const monthly = [
-  { month: 'Jan', remote: 6, presencial: 3 },
-  { month: 'Fev', remote: 12, presencial: 6 },
-  { month: 'Mar', remote: 19, presencial: 11 },
-  { month: 'Abr', remote: 26, presencial: 18 },
-  { month: 'Mai', remote: 23, presencial: 14 },
-  { month: 'Jun', remote: 16, presencial: 10 },
+  { month: 'Jan', remote: 18, presencial: 7 },
+  { month: 'Fev', remote: 24, presencial: 9 },
+  { month: 'Mar', remote: 35, presencial: 12 },
+  { month: 'Abr', remote: 28, presencial: 16 },
+  { month: 'Mai', remote: 31, presencial: 18 },
 ];
 
-const topActions = [
-  { label: 'Plantao de duvidas', value: 44, share: 27, color: '#007ec3' },
-  { label: 'Planejamento', value: 22, share: 13, color: '#b8cf00' },
-  { label: 'Devolutivas e relat.', value: 20, share: 12, color: '#ffd500' },
-  { label: 'Eventos escolares', value: 8, share: 5, color: '#ea5b0c' },
+const topUnits = [
+  { name: 'São Carlos (SVP)', visits: 53, color: '#007EC3' },
+  { name: 'São José', visits: 22, color: '#82BC00' },
+  { name: 'São Carlos (Caxias)', visits: 17, color: '#007EC3' },
+  { name: 'Santa Teresa', visits: 16, color: '#EA5B0C' },
+  { name: 'Scalabriano S.J.', visits: 13, color: '#EA5B0C' },
 ];
 
-const formatHours = (value) => value.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+const sidebarItems = [
+  { icon: Home, label: 'Visão Geral', active: true },
+  { icon: TrendingUp, label: 'Evolução' },
+  { icon: Zap, label: 'Ações' },
+  { icon: Building2, label: 'Unidades' },
+  { icon: Users, label: 'Participantes' },
+  { icon: HandHelping, label: 'Atendimentos' },
+  { icon: FileText, label: 'Relatórios' },
+  { icon: Download, label: 'Exportar' },
+];
 
-function ZoomMark() {
-  return (
-    <div className="zoom-mark" aria-label="ZOOM education for life">
-      <span className="z">Z</span><span className="o-one">O</span><span className="o-two">O</span><span className="m">M</span>
-      <small>education for life</small>
-    </div>
-  );
-}
+function DonutChart() {
+  const total = actionDistribution.reduce((s, a) => s + a.pct, 0);
+  let cumulative = 0;
+  const slices = actionDistribution.filter(a => a.pct > 0).map(a => {
+    const start = cumulative;
+    cumulative += a.pct;
+    return { ...a, start, end: cumulative };
+  });
+  const r = 80, cx = 100, cy = 100;
 
-function KpiCard({ icon: Icon, value, label, accent, suffix = '', delay = 0 }) {
-  return (
-    <article className="kpi-card" style={{ '--accent': accent, '--delay': `${delay}ms` }}>
-      <div className="kpi-icon"><Icon size={22} /></div>
-      <strong>{value}{suffix}</strong>
-      <span>{label}</span>
-    </article>
-  );
-}
+  function arcPath(startPct, endPct) {
+    const s = (startPct / total) * 360 - 90;
+    const e = (endPct / total) * 360 - 90;
+    const sr = (s * Math.PI) / 180;
+    const er = (e * Math.PI) / 180;
+    const x1 = cx + r * Math.cos(sr), y1 = cy + r * Math.sin(sr);
+    const x2 = cx + r * Math.cos(er), y2 = cy + r * Math.sin(er);
+    const large = (endPct - startPct) / total > 0.5 ? 1 : 0;
+    return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+  }
 
-function Donut({ remote, presencial }) {
-  const total = remote + presencial;
-  const remoteShare = Math.round((remote / total) * 100);
   return (
-    <div className="donut-wrap">
-      <div className="donut" style={{ '--remote': `${remoteShare * 3.6}deg` }}>
-        <span>{remoteShare}%</span>
-        <small>Remoto</small>
-      </div>
+    <div className="donut-section">
+      <svg viewBox="0 0 200 200" className="donut-svg">
+        {slices.map(s => (
+          <path key={s.label} d={arcPath(s.start, s.end)} fill={s.color} />
+        ))}
+        <circle cx={cx} cy={cy} r={48} fill="white" />
+      </svg>
       <div className="donut-legend">
-        <p><i className="blue" /> {remote} remotos</p>
-        <p><i className="orange" /> {presencial} presenciais</p>
-      </div>
-    </div>
-  );
-}
-
-function MonthlyChart({ mode }) {
-  const max = Math.max(...monthly.map((item) => item.remote + item.presencial));
-  return (
-    <div className="chart monthly-chart">
-      {monthly.map((item) => {
-        const remoteHeight = mode === 'presencial' ? 0 : (item.remote / max) * 100;
-        const presHeight = mode === 'remoto' ? 0 : (item.presencial / max) * 100;
-        return (
-          <div className="month" key={item.month}>
-            <div className="bars">
-              <span className="bar remote" style={{ height: `${remoteHeight}%` }} />
-              <span className="bar presencial" style={{ height: `${presHeight}%` }} />
-            </div>
-            <small>{item.month}</small>
+        {actionDistribution.map(a => (
+          <div key={a.label} className="legend-item">
+            <span className="legend-dot" style={{ background: a.color }} />
+            <span className="legend-label">{a.label}</span>
+            <span className="legend-pct">{a.pct}%</span>
           </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function ActionList() {
-  return (
-    <div className="action-list">
-      {topActions.map((action, index) => (
-        <button className="action-row" key={action.label} style={{ '--row-color': action.color, '--row-delay': `${index * 120}ms` }}>
-          <span>{action.label}</span>
-          <strong>{action.share}%</strong>
-          <i style={{ width: `${action.share * 2.5}%` }} />
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function SchoolBars({ selected, onSelect }) {
-  const max = Math.max(...schools.map((school) => school.visits));
-  return (
-    <div className="school-bars">
-      {schools.map((school) => (
-        <button
-          className={selected.name === school.name ? 'school-bar active' : 'school-bar'}
-          key={school.name}
-          onClick={() => onSelect(school)}
-          style={{ '--size': `${(school.visits / max) * 100}%` }}
-        >
-          <span>{school.short}</span>
-          <i />
-          <strong>{school.visits}</strong>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function DetailPanel({ school }) {
-  const actionEntries = Object.entries(school.actions).sort((a, b) => b[1] - a[1]).slice(0, 4);
-  return (
-    <aside className="detail-panel">
-      <div className="detail-top">
-        <div>
-          <p>Unidade selecionada</p>
-          <h2>{school.name}</h2>
-        </div>
-        <span>{school.state}</span>
-      </div>
-      <div className="detail-grid">
-        <b>{school.visits}<small>atendimentos</small></b>
-        <b>{formatHours(school.hours)}h<small>horas</small></b>
-        <b>{school.participants}<small>participantes</small></b>
-      </div>
-      <div className="meta-line"><GraduationCap size={16} /> {school.segments}</div>
-      <div className="meta-line"><Users size={16} /> {school.responsible}</div>
-      <div className="mini-actions">
-        {actionEntries.map(([key, value]) => (
-          <p key={key}><span>{key}</span><strong>{value}</strong></p>
         ))}
       </div>
-      <section>
-        <h3>Destaque</h3>
-        <p>{school.highlight}</p>
-      </section>
-      <section>
-        <h3>Ponto de atencao</h3>
-        <p>{school.attention}</p>
-      </section>
-    </aside>
+    </div>
+  );
+}
+
+function LineChart() {
+  const maxVal = 60;
+  const w = 440, h = 200, pad = { top: 20, right: 20, bottom: 30, left: 35 };
+  const chartW = w - pad.left - pad.right;
+  const chartH = h - pad.top - pad.bottom;
+
+  function x(i) { return pad.left + (i / (monthly.length - 1)) * chartW; }
+  function y(v) { return pad.top + chartH - (v / maxVal) * chartH; }
+
+  const remotePath = monthly.map((m, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(m.remote)}`).join(' ');
+  const presPath = monthly.map((m, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(m.presencial)}`).join(' ');
+
+  const gridLines = [0, 10, 20, 30, 40, 50, 60];
+
+  return (
+    <div className="line-chart-wrap">
+      <div className="chart-legend-row">
+        <span className="chart-legend-item"><i style={{ background: '#007EC3' }} /> Remoto</span>
+        <span className="chart-legend-item"><i style={{ background: '#82BC00' }} /> Presencial</span>
+      </div>
+      <svg viewBox={`0 0 ${w} ${h}`} className="line-chart-svg">
+        {gridLines.map(v => (
+          <g key={v}>
+            <line x1={pad.left} y1={y(v)} x2={w - pad.right} y2={y(v)} stroke="#e5e7eb" strokeWidth="1" />
+            <text x={pad.left - 8} y={y(v) + 4} textAnchor="end" fill="#9ca3af" fontSize="11">{v}</text>
+          </g>
+        ))}
+        <path d={remotePath} fill="none" stroke="#007EC3" strokeWidth="2.5" strokeLinejoin="round" />
+        <path d={presPath} fill="none" stroke="#82BC00" strokeWidth="2.5" strokeLinejoin="round" />
+        {monthly.map((m, i) => (
+          <g key={m.month}>
+            <circle cx={x(i)} cy={y(m.remote)} r="5" fill="#007EC3" stroke="white" strokeWidth="2" />
+            <text x={x(i)} y={y(m.remote) - 12} textAnchor="middle" fill="#007EC3" fontSize="12" fontWeight="700">{m.remote}</text>
+            <circle cx={x(i)} cy={y(m.presencial)} r="5" fill="#82BC00" stroke="white" strokeWidth="2" />
+            <text x={x(i)} y={y(m.presencial) + 20} textAnchor="middle" fill="#82BC00" fontSize="12" fontWeight="700">{m.presencial}</text>
+            <text x={x(i)} y={h - 6} textAnchor="middle" fill="#6b7280" fontSize="12">{m.month}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function HorizontalBars() {
+  const max = 60;
+  const othersVisits = 164 - topUnits.reduce((s, u) => s + u.visits, 0);
+  const allUnits = [...topUnits, { name: 'Outros', visits: othersVisits, color: '#6B7280' }];
+
+  return (
+    <div className="h-bars">
+      {allUnits.map(u => (
+        <div key={u.name} className="h-bar-row">
+          <span className="h-bar-label">{u.name}</span>
+          <div className="h-bar-track">
+            <div className="h-bar-fill" style={{ width: `${(u.visits / max) * 100}%`, background: u.color }} />
+          </div>
+          <span className="h-bar-value">{u.visits}</span>
+        </div>
+      ))}
+      <div className="h-bar-axis">
+        {[0, 10, 20, 30, 40, 50, 60].map(v => <span key={v}>{v}</span>)}
+      </div>
+    </div>
+  );
+}
+
+function MiniMap() {
+  return (
+    <div className="mini-map">
+      <svg viewBox="0 0 200 280" className="map-svg">
+        <path d="M80 30 C90 20, 140 15, 155 25 C170 35, 175 55, 170 75 C165 95, 140 100, 130 95 C120 90, 100 85, 85 80 C70 75, 60 55, 80 30Z" fill="#e5e7eb" stroke="#d1d5db" strokeWidth="1" />
+        <circle cx="130" cy="50" r="8" fill="#FFD500" />
+        <text x="140" y="45" fill="#374151" fontSize="13" fontWeight="700">SP</text>
+
+        <path d="M55 95 C65 85, 110 80, 135 90 C160 100, 170 120, 165 140 C160 160, 130 165, 110 160 C90 155, 50 140, 45 120 C40 100, 55 95, 55 95Z" fill="#e5e7eb" stroke="#d1d5db" strokeWidth="1" />
+        <circle cx="100" cy="125" r="8" fill="#82BC00" />
+        <text x="110" y="120" fill="#374151" fontSize="13" fontWeight="700">PR</text>
+
+        <path d="M30 165 C40 155, 100 150, 130 160 C160 170, 175 200, 165 230 C155 260, 110 275, 80 270 C50 265, 20 240, 15 210 C10 180, 30 165, 30 165Z" fill="#e5e7eb" stroke="#d1d5db" strokeWidth="1" />
+        <circle cx="90" cy="210" r="10" fill="#EA5B0C" />
+        <text x="102" y="205" fill="#374151" fontSize="13" fontWeight="700">RS</text>
+      </svg>
+      <div className="map-legend">
+        <div><span className="map-dot" style={{ background: '#d1d5db' }} /> 0</div>
+        <div><span className="map-dot" style={{ background: '#82BC00' }} /> 1 - 10</div>
+        <div><span className="map-dot" style={{ background: '#FFD500' }} /> 11 - 30</div>
+        <div><span className="map-dot" style={{ background: '#EA5B0C' }} /> 31 - 60</div>
+      </div>
+    </div>
+  );
+}
+
+function SchoolDetail({ school }) {
+  return (
+    <div className="school-detail-card">
+      <div className="sd-header">
+        <div className="sd-icon"><School size={32} strokeWidth={1.5} /></div>
+        <div className="sd-info">
+          <h3>{school.name}</h3>
+          <div className="sd-stats">
+            <span><Calendar size={14} /> <b>{school.visits}</b> Atendimentos</span>
+            <span><Clock size={14} /> <b>{school.hours.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}h</b> Horas</span>
+            <span><MapPin size={14} /> <b>{school.state}</b> Estado</span>
+          </div>
+        </div>
+      </div>
+      <p className="sd-segments"><b>Segmentos:</b> {school.segments}</p>
+      <p className="sd-responsible"><b>Responsável:</b> <a href="#">{school.responsible}</a></p>
+      <div className="sd-actions-title">PRINCIPAIS AÇÕES</div>
+      <div className="sd-actions-tags">
+        {school.actions.slice(0, 4).map(a => (
+          <span key={a.label} className="sd-tag">{a.label} ({a.count})</span>
+        ))}
+        {school.actions.length > 4 && <span className="sd-tag sd-tag-more">+{school.actions.length - 4}</span>}
+      </div>
+    </div>
   );
 }
 
 export default function App() {
-  const [mode, setMode] = useState('todos');
-  const [selected, setSelected] = useState(schools[0]);
-  const totals = useMemo(() => {
-    const base = schools.reduce((acc, school) => {
-      acc.visits += school.visits;
-      acc.hours += school.hours;
-      acc.remote += school.remote;
-      acc.presencial += school.presencial;
-      acc.participants += school.participants;
-      return acc;
-    }, { visits: 0, hours: 0, remote: 0, presencial: 0, participants: 0 });
-    return { ...base, units: 12 };
-  }, []);
+  const [selectedSchool, setSelectedSchool] = useState(schools[0]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <main className="app-shell">
-      <div className="brand-orbits" aria-hidden="true">
-        <i className="orbit orbit-a" />
-        <i className="orbit orbit-b" />
-        <i className="orbit orbit-c" />
-        <i className="dot dot-a" />
-        <i className="dot dot-b" />
-        <i className="dot dot-c" />
-      </div>
-
-      <header className="topbar">
-        <ZoomMark />
-        <nav>
-          <a href="#impacto">Impacto</a>
-          <a href="#acoes">Acoes</a>
-          <a href="#unidades">Unidades</a>
+    <div className="layout">
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="sidebar-logo">
+          <div className="zoom-logo">
+            <span className="zl-z">Z</span><span className="zl-o1">O</span><span className="zl-o2">O</span><span className="zl-m">M</span>
+          </div>
+          <small className="zoom-tagline">education for life</small>
+        </div>
+        <nav className="sidebar-nav">
+          {sidebarItems.map(item => (
+            <a key={item.label} href="#" className={`sidebar-item ${item.active ? 'active' : ''}`}>
+              <item.icon size={20} />
+              <span>{item.label}</span>
+            </a>
+          ))}
         </nav>
-        <button className="play-button"><Play size={16} fill="currentColor" /> Animacao ativa</button>
-      </header>
+        <a href="#" className="sidebar-item sidebar-bottom-item">
+          <Info size={20} />
+          <span>Sobre os dados</span>
+        </a>
+      </aside>
 
-      <section className="hero-grid">
-        <div className="hero-copy">
-          <div className="title-lockup">
-            <MousePointer2 size={30} />
-            <h1>REDE ESI</h1>
+      <main className="main-content">
+        <header className="topbar">
+          <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+          <div className="topbar-right">
+            <button className="topbar-btn date-btn">
+              <Calendar size={16} />
+              <span>Janeiro a Maio / 2026</span>
+            </button>
+            <button className="topbar-btn filter-btn">
+              <SlidersHorizontal size={16} />
+              <span>Filtros</span>
+            </button>
+            <button className="topbar-icon-btn notif-btn">
+              <Bell size={18} />
+              <span className="notif-badge">2</span>
+            </button>
+            <div className="avatar">CA</div>
           </div>
-          <p>Resultados de Atendimento 2026</p>
-          <div className="mode-switch" aria-label="Filtro por modalidade">
-            {['todos', 'remoto', 'presencial'].map((item) => (
-              <button key={item} className={mode === item ? 'active' : ''} onClick={() => setMode(item)}>
-                {item}
-              </button>
-            ))}
+        </header>
+
+        <section className="page-title-section">
+          <div className="title-deco">
+            <i className="deco-circle deco-green" />
+            <i className="deco-circle deco-orange" />
+            <i className="deco-circle deco-blue" />
           </div>
-        </div>
-        <div className="pulse-card">
-          <Sparkles size={20} />
-          <strong>3 estados</strong>
-          <span>RS, PR e SP conectados pela assessoria ZOOM</span>
-        </div>
-      </section>
+          <h1 className="page-title">REDE ESI</h1>
+          <p className="page-subtitle">Resultados de Atendimento 2026</p>
+        </section>
 
-      <section className="kpi-grid" id="impacto">
-        <KpiCard icon={Activity} value={164} label="Atendimentos realizados" accent="#007ec3" />
-        <KpiCard icon={Clock3} value="186,5" suffix="h" label="Horas de atendimento" accent="#ffd500" delay={80} />
-        <KpiCard icon={School} value={12} label="Unidades atendidas" accent="#b8cf00" delay={160} />
-        <KpiCard icon={Users} value={69} label="Participantes impactados" accent="#ea5b0c" delay={240} />
-      </section>
-
-      <section className="dashboard-grid">
-        <article className="panel split-panel">
-          <div className="panel-heading">
-            <div>
-              <p>Modalidade</p>
-              <h2>Remoto vs presencial</h2>
+        <section className="kpi-row">
+          <div className="kpi-card kpi-blue">
+            <div className="kpi-icon"><Users size={24} /></div>
+            <div className="kpi-value">164</div>
+            <div className="kpi-label">ATENDIMENTOS REALIZADOS</div>
+          </div>
+          <div className="kpi-card kpi-yellow">
+            <div className="kpi-icon"><Clock size={24} /></div>
+            <div className="kpi-value">186,5h</div>
+            <div className="kpi-label">HORAS DE ATENDIMENTO</div>
+          </div>
+          <div className="kpi-card kpi-green">
+            <div className="kpi-icon"><Building2 size={24} /></div>
+            <div className="kpi-value">12</div>
+            <div className="kpi-label">UNIDADES ATENDIDAS</div>
+          </div>
+          <div className="kpi-card kpi-orange">
+            <div className="kpi-icon"><Users size={24} /></div>
+            <div className="kpi-value">69</div>
+            <div className="kpi-label">PARTICIPANTES IMPACTADOS</div>
+          </div>
+          <div className="kpi-card kpi-modality">
+            <div className="kpi-modality-title">REMOTO VS PRESENCIAL</div>
+            <div className="modality-row">
+              <div className="modality-item mod-remote">
+                <div className="mod-circle">
+                  <svg viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="15.5" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                    <circle cx="18" cy="18" r="15.5" fill="none" stroke="#007EC3" strokeWidth="3"
+                      strokeDasharray="97.4" strokeDashoffset={97.4 * (1 - 0.62)} transform="rotate(-90 18 18)" />
+                  </svg>
+                  <span>62%</span>
+                </div>
+                <div className="mod-label">Remotos<br /><b>102</b></div>
+              </div>
+              <div className="modality-item mod-presencial">
+                <div className="mod-circle">
+                  <svg viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="15.5" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                    <circle cx="18" cy="18" r="15.5" fill="none" stroke="#EA5B0C" strokeWidth="3"
+                      strokeDasharray="97.4" strokeDashoffset={97.4 * (1 - 0.38)} transform="rotate(-90 18 18)" />
+                  </svg>
+                  <span>38%</span>
+                </div>
+                <div className="mod-label">Presenciais<br /><b>62</b></div>
+              </div>
             </div>
-            <MapPin size={20} />
           </div>
-          <Donut remote={totals.remote} presencial={totals.presencial} />
-        </article>
+        </section>
 
-        <article className="panel wide-panel">
-          <div className="panel-heading">
-            <div>
-              <p>Ritmo mensal</p>
-              <h2>Evolucao dos atendimentos</h2>
+        <section className="grid-row-3">
+          <div className="card">
+            <h2 className="card-title">DISTRIBUIÇÃO POR TIPO DE AÇÃO</h2>
+            <DonutChart />
+          </div>
+          <div className="card">
+            <h2 className="card-title">EVOLUÇÃO MENSAL DE ATENDIMENTOS</h2>
+            <LineChart />
+          </div>
+          <div className="card">
+            <div className="card-title-row">
+              <h2 className="card-title">DESTAQUE DA UNIDADE</h2>
+              <a href="#" className="ver-todas">Ver todas</a>
             </div>
-            <BarChart3 size={20} />
-          </div>
-          <MonthlyChart mode={mode} />
-        </article>
-
-        <article className="panel" id="acoes">
-          <div className="panel-heading">
-            <div>
-              <p>Top 3 + eventos</p>
-              <h2>Distribuicao por acao</h2>
+            <SchoolDetail school={selectedSchool} />
+            <div className="highlights-section">
+              <div className="highlight-box highlight-green">
+                <div className="highlight-icon"><CheckCircle size={20} /></div>
+                <div>
+                  <strong>DESTAQUES</strong>
+                  <p>{selectedSchool.highlight}</p>
+                </div>
+              </div>
+              <div className="highlight-box highlight-red">
+                <div className="highlight-icon"><AlertCircle size={20} /></div>
+                <div>
+                  <strong>PONTOS DE ATENÇÃO</strong>
+                  <p>{selectedSchool.attention}</p>
+                </div>
+              </div>
             </div>
-            <RotateCcw size={20} />
           </div>
-          <ActionList />
-        </article>
+        </section>
 
-        <article className="panel wide-panel rank-panel" id="unidades">
-          <div className="panel-heading">
-            <div>
-              <p>Ranking</p>
-              <h2>Atendimentos por escola</h2>
+        <section className="grid-row-bottom">
+          <div className="card card-top3">
+            <h2 className="card-title">TOP 3 AÇÕES</h2>
+            <div className="top3-list">
+              <div className="top3-item">
+                <span className="top3-rank r1">1</span>
+                <div>
+                  <strong>Plantão de dúvidas</strong>
+                  <span className="top3-pct">27% dos atendimentos</span>
+                </div>
+              </div>
+              <div className="top3-item">
+                <span className="top3-rank r2">2</span>
+                <div>
+                  <strong>Planejamento</strong>
+                  <span className="top3-pct">13% dos atendimentos</span>
+                </div>
+              </div>
+              <div className="top3-item">
+                <span className="top3-rank r3">3</span>
+                <div>
+                  <strong>Devolutivas e Relatórios</strong>
+                  <span className="top3-pct">12% dos atendimentos</span>
+                </div>
+              </div>
             </div>
-            <School size={20} />
           </div>
-          <SchoolBars selected={selected} onSelect={setSelected} />
-        </article>
+          <div className="card">
+            <h2 className="card-title">ATENDIMENTOS POR UNIDADE (TOP 6)</h2>
+            <HorizontalBars />
+          </div>
+          <div className="card">
+            <h2 className="card-title">MAPA DE UNIDADES</h2>
+            <MiniMap />
+          </div>
+        </section>
 
-        <DetailPanel school={selected} />
-      </section>
-    </main>
+        <footer className="dashboard-footer">
+          <span><Calendar size={14} /> Dados atualizados em 23/06/2026 11:30</span>
+          <span className="footer-source">
+            Fonte: Sistema de Atendimento ZOOM
+            <span className="footer-zoom">
+              <b className="fz-z">Z</b><b className="fz-o1">O</b><b className="fz-o2">O</b><b className="fz-m">M</b>
+            </span>
+          </span>
+        </footer>
+      </main>
+    </div>
   );
 }
