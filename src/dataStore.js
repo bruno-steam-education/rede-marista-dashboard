@@ -12,6 +12,10 @@ export const loadLocalCache = () => {
     const cached = localStorage.getItem('redeEsiData');
     if (cached) {
       const parsed = JSON.parse(cached);
+      if (!parsed.TOTAL || !Array.isArray(parsed.schools) || parsed.schools.length === 0) {
+        localStorage.removeItem('redeEsiData');
+        return false;
+      }
       schools = parsed.schools;
       actionDistribution = parsed.actionDistribution;
       monthly = parsed.monthly;
@@ -29,6 +33,7 @@ export const fetchSheetData = () => {
     Papa.parse('https://docs.google.com/spreadsheets/d/1_upLb6WdHxg39MNvCyAeJ-H6ZLfvBqYpW_8qvpX1wDQ/gviz/tq?tqx=out:csv', {
       download: true,
       header: true,
+      skipEmptyLines: true,
       complete: (results) => {
         try {
           const oldTotal = TOTAL;
@@ -69,6 +74,16 @@ const parseHours = (hStr) => {
   return parseFloat(hStr) || 0;
 };
 
+const getField = (row, names, fallback = '') => {
+  for (const name of names) {
+    const value = row[name];
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      return String(value).trim();
+    }
+  }
+  return fallback;
+};
+
 const processData = (data) => {
   const sMap = {};
   const aMap = {};
@@ -82,19 +97,19 @@ const processData = (data) => {
   let totalVisits = 0;
 
   data.forEach(row => {
-    const escola = row['Escola'];
+    const escola = getField(row, ['Escola', 'Nome da escola', 'Nome da Escola']);
     if (!escola) return;
     
     totalVisits++;
-    const state = row['Estado'] || 'SP';
-    const resp = row['Responsável'] || '';
-    const date = row['Data'];
-    const acaoRaw = row['Ação'];
+    const state = getField(row, ['Estado'], 'SP');
+    const resp = getField(row, ['Responsável', 'Nome do responsável']);
+    const date = getField(row, ['Data', 'Data do atendimento']);
+    const acaoRaw = getField(row, ['Ação']);
     const acao = cleanAction(acaoRaw);
-    const hours = parseHours(row['Horas']);
-    const mod = row['Modalidade'];
-    const participantsStr = row['Participantes'] || '';
-    const seg = row['Segmento'] || 'Geral';
+    const hours = parseHours(getField(row, ['Horas', 'DuraÃ§Ã£o da aÃ§Ã£o', 'Duração da ação']));
+    const mod = getField(row, ['Modalidade', 'Tipo do atendimento']);
+    const participantsStr = getField(row, ['Participantes']);
+    const seg = getField(row, ['Segmento'], 'Geral');
 
     if (!sMap[escola]) {
       sMap[escola] = {

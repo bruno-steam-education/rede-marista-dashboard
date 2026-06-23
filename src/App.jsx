@@ -12,6 +12,17 @@ import { motion } from 'framer-motion';
 const fmtPct = (v) => Math.round((v / TOTAL) * 100);
 const fmtH = (v) => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 
+const sidebarItems = [
+  { page: 'overview', label: 'Visão Geral', icon: Home },
+  { page: 'evolution', label: 'Evolução', icon: TrendingUp },
+  { page: 'actions', label: 'Ações', icon: Zap },
+  { page: 'units', label: 'Unidades', icon: Building2 },
+  { page: 'attendance', label: 'Atendimentos', icon: HandHelping },
+  { page: 'participants', label: 'Participantes', icon: Users },
+  { page: 'reports', label: 'Relatórios', icon: FileText },
+  { page: 'export', label: 'Exportar', icon: Download },
+];
+
 /* ═══════════════════════════════════════════════════════════════
    COMPONENTS
    ═══════════════════════════════════════════════════════════════ */
@@ -699,6 +710,7 @@ function UpdateProgressModal({ isOpen, step, progress, message }) {
    ═══════════════════════════════════════════════════════════════ */
 
 export default function App() {
+  const [page, setPage] = useState('overview');
   const [dataKey, setDataKey] = useState(0);
   const [updateState, setUpdateState] = useState({ isOpen: false, step: 0, progress: 0, message: '' });
   const [selectedSchool, setSelectedSchool] = useState(null);

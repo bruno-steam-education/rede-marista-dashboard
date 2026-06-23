@@ -664,6 +664,27 @@
 
   async function sendQuestion(text) {
     appendMessage("user", text);
+
+    if (isDashboardUpdateCommand(text)) {
+      if (typeof window.refreshDashboardData === "function") {
+        setAssistantStatus("Atualizando dados da planilha...");
+        appendMessage("zet", "Claro. Vou buscar a planilha novamente e atualizar os indicadores do dashboard agora.");
+        try {
+          await window.refreshDashboardData();
+          appendMessage("zet", "Atualização concluída. Os dados visíveis do dashboard foram recarregados a partir da planilha.");
+          setAssistantStatus("Dashboard atualizado.");
+        } catch (error) {
+          console.error("[ZET] atualização do dashboard falhou:", error);
+          appendMessage("zet", "Tentei atualizar a planilha, mas encontrei um erro. Verifique se a planilha está publicada e acessível.");
+          setAssistantStatus("Falha ao atualizar dados.");
+        }
+      } else {
+        appendMessage("zet", "Ainda não encontrei a função de atualização do dashboard nesta página.");
+        setAssistantStatus("Atualização indisponível.");
+      }
+      return;
+    }
+
     isThinking = true;
     avatar.innerHTML = renderAvatar();
     setAssistantStatus("Consultando a IA...");
@@ -673,6 +694,19 @@
     isThinking = false;
     avatar.innerHTML = renderAvatar();
     appendMessage("zet", reply);
+  }
+
+  function isDashboardUpdateCommand(text) {
+    const q = normalize(text || "");
+    return (
+      q === "atualize" ||
+      q === "atualizar" ||
+      q.includes("atualize os dados") ||
+      q.includes("atualizar dados") ||
+      q.includes("atualize a planilha") ||
+      q.includes("recarregue a planilha") ||
+      q.includes("buscar planilha")
+    );
   }
 
   function setAssistantStatus(text) {
