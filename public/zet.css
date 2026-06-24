@@ -315,6 +315,76 @@
   color: #233348;
 }
 
+.zet-pet-message.is-thinking {
+  border: 1px solid rgba(18, 128, 199, 0.12);
+  background:
+    radial-gradient(circle at 14px 12px, rgba(18, 128, 199, 0.14), transparent 18px),
+    #f3f8fd;
+}
+
+.zet-thinking-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #31506e;
+}
+
+.zet-thinking-orbit {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(18, 128, 199, 0.18);
+  border-top-color: var(--zet-blue);
+  box-shadow: 0 0 0 4px rgba(18, 128, 199, 0.06);
+  animation: zetThinkingOrbit 0.9s linear infinite;
+  flex: 0 0 auto;
+}
+
+.zet-thinking-label {
+  min-width: 0;
+  flex: 1;
+}
+
+.zet-thinking-dots {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.zet-thinking-dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--zet-blue);
+  opacity: 0.28;
+  animation: zetTypingDot 1s ease-in-out infinite;
+}
+
+.zet-thinking-dots i:nth-child(2) { animation-delay: 0.14s; }
+.zet-thinking-dots i:nth-child(3) { animation-delay: 0.28s; }
+
+.zet-pet-message.is-thinking.is-complete .zet-thinking-orbit {
+  animation: none;
+  border-color: rgba(130, 188, 0, 0.28);
+  border-top-color: #82bc00;
+}
+
+.zet-pet-message.is-typing::after {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 1.15em;
+  margin-left: 3px;
+  border-radius: 999px;
+  background: var(--zet-blue);
+  vertical-align: -0.2em;
+  animation: zetCursorBlink 0.72s steps(2, start) infinite;
+}
+
 .zet-pet-message.is-user {
   margin-left: 28px;
   background: var(--zet-blue);
@@ -526,6 +596,34 @@
 }
 
 /* Didática premium para mensagens do ZET */
+@keyframes zetThinkingOrbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes zetTypingDot {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.28;
+  }
+  50% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+
+@keyframes zetCursorBlink {
+  0%, 45% { opacity: 1; }
+  46%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zet-thinking-orbit,
+  .zet-thinking-dots i,
+  .zet-pet-message.is-typing::after {
+    animation: none;
+  }
+}
+
 .zet-pet-message.is-zet strong {
   font-weight: 700;
   color: var(--zet-blue);

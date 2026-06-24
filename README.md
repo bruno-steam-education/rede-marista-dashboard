@@ -18,3 +18,14 @@ npm run build
 ```
 
 O app e estatico e pode ser publicado em GitHub Pages a partir do build Vite.
+
+## ZET
+
+O assistente usa a rota serverless `/api/zet`.
+
+Configure uma destas variaveis no ambiente da Vercel:
+
+- `GROQ_API_KEY` e opcionalmente `GROQ_MODEL`
+- `OPENROUTER_API_KEY` e opcionalmente `OPENROUTER_MODEL`
+
+Se as duas chaves existirem, o projeto usa Groq primeiro.

@@ -12,9 +12,11 @@
     <script type="module" src="/src/main.jsx"></script>
     <script>
       window.ZET_CONFIG = {
-        BACKEND_URL: "https://zet-backend.vercel.app/api/zet",
+        BACKEND_URL: "/api/zet",
         REQUEST_TIMEOUT_MS: 20000,
         RETRY_ATTEMPTS: 1,
+        MIN_REFLECTION_MS: 2200,
+        TYPING_STEP_MS: 24,
         ENABLE_DESKTOP_PHRASES: true,
         FIRST_BALLOON_DELAY_MS: 8000,
         BALLOON_INTERVAL_MS: 45000,

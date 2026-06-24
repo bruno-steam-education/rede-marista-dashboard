@@ -335,6 +335,14 @@
   let phraseIndex = 0;
   let balloonTimeout = 0;
   const chatHistory = [];
+  const thinkingSteps = [
+    "Lendo sua pergunta",
+    "Conferindo o dashboard",
+    "Cruzando os dados",
+    "Organizando a resposta"
+  ];
+  const minReflectionMs = Math.max(900, Number(runtimeConfig.MIN_REFLECTION_MS || 2200));
+  const typingStepMs = Math.max(12, Number(runtimeConfig.TYPING_STEP_MS || 24));
 
   function updateZetColor(colorKey) {
     if (ZET_COLORS[colorKey]) {
@@ -686,13 +694,17 @@
 
     isThinking = true;
     avatar.innerHTML = renderAvatar();
-    setAssistantStatus("Consultando a IA...");
+    setAssistantStatus("ZET esta refletindo...");
+
+    const thinkingStartedAt = Date.now();
+    const thinkingMessage = appendThinkingMessage();
 
     const reply = await askAgent(text);
 
     isThinking = false;
     avatar.innerHTML = renderAvatar();
-    appendMessage("zet", reply);
+    await finishThinkingMessage(thinkingMessage, thinkingStartedAt);
+    await appendTypedMessage("zet", reply);
   }
 
   function isDashboardUpdateCommand(text) {
@@ -893,6 +905,72 @@
     return new Promise(resolve => window.setTimeout(resolve, ms));
   }
 
+  function appendThinkingMessage() {
+    const item = document.createElement("div");
+    item.className = "zet-pet-message is-zet is-thinking";
+    item.innerHTML = `
+      <div class="zet-thinking-line">
+        <span class="zet-thinking-orbit" aria-hidden="true"></span>
+        <span class="zet-thinking-label">${thinkingSteps[0]}</span>
+        <span class="zet-thinking-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      </div>
+    `;
+    messages.appendChild(item);
+    messages.scrollTop = messages.scrollHeight;
+
+    let step = 0;
+    const label = item.querySelector(".zet-thinking-label");
+    item._zetThinkingTimer = window.setInterval(() => {
+      step = (step + 1) % thinkingSteps.length;
+      if (label) label.textContent = thinkingSteps[step];
+      messages.scrollTop = messages.scrollHeight;
+    }, 700);
+
+    return item;
+  }
+
+  async function finishThinkingMessage(item, startedAt) {
+    const elapsed = Date.now() - startedAt;
+    const remaining = Math.max(0, minReflectionMs - elapsed);
+    if (remaining) await wait(remaining);
+
+    if (!item) return;
+    window.clearInterval(item._zetThinkingTimer);
+    const label = item.querySelector(".zet-thinking-label");
+    if (label) label.textContent = "Resposta pronta";
+    item.classList.add("is-complete");
+    await wait(260);
+    item.remove();
+  }
+
+  async function appendTypedMessage(role, text) {
+    if (role !== "zet" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      appendMessage(role, text);
+      return;
+    }
+
+    const item = document.createElement("div");
+    item.className = `zet-pet-message is-${role} is-typing`;
+    messages.appendChild(item);
+    messages.scrollTop = messages.scrollHeight;
+
+    const cleanText = String(text || "");
+    const duration = Math.min(3600, Math.max(850, cleanText.length * 16));
+    const steps = Math.max(1, Math.ceil(duration / typingStepMs));
+    const charsPerStep = Math.max(1, Math.ceil(cleanText.length / steps));
+
+    for (let index = charsPerStep; index < cleanText.length; index += charsPerStep) {
+      item.innerHTML = formatMarkdown(cleanText.slice(0, index));
+      messages.scrollTop = messages.scrollHeight;
+      await wait(typingStepMs);
+    }
+
+    item.classList.remove("is-typing");
+    item.innerHTML = formatMarkdown(cleanText);
+    messages.scrollTop = messages.scrollHeight;
+    chatHistory.push({ role, text: cleanText });
+  }
+
   /* ==========================================================================
      CUSTOMIZE 2 — RESPOSTAS OFFLINE (fallback sem API)
      Use normalize(text) e cheque palavras-chave. Mantenha respostas curtas.
@@ -902,15 +980,15 @@
     const q = normalize(text);
 
     if (q.includes("ola") || q.includes("oi") || q.includes("bom dia") || q.includes("boa tarde")) {
-      return "Olá! 👋 Que bom falar com você. Como posso ajudar por aqui?";
+      return "Olá! 👋 Que bom falar com você.\n\nPosso te ajudar a **ler os dados**, *encontrar padrões* e levantar boas perguntas sobre o dashboard.";
     }
     if (q.includes("como voce esta") || q.includes("como vc esta") || q.includes("tudo bem")) {
-      return "Estou bem e pronto para te ajudar com este projeto. Se quiser, posso explicar como o app funciona ou investigar algum problema específico.";
+      return "Estou bem e pronto para ajudar ✨\n\nPosso olhar para **escolas**, *meses*, ações ou tendências e transformar esses dados em insights mais claros.";
     }
     if (q.includes("ajuda") || q.includes("fazer") || q.includes("pode")) {
-      return "Eu posso te ajudar a **navegar** e tirar dúvidas sobre este projeto. É só perguntar!";
+      return "Eu posso te ajudar em três frentes:\n\n- **Navegar** pelo dashboard\n- *Interpretar* tendências e comparações\n- Sugerir próximos passos pedagógicos 💡";
     }
-    return "Estou aqui para ajudar com os assuntos deste projeto. Pode me perguntar à vontade! 😊";
+    return "Estou aqui para ajudar com os assuntos deste projeto 😊\n\nPergunte algo como: **qual escola merece atenção?** ou *por que um mês teve menos atendimentos?*";
   }
 
   function formatMarkdown(text) {

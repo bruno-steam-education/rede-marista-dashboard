@@ -3,12 +3,13 @@ import {
   Home, TrendingUp, Zap, Building2, Users, HandHelping,
   FileText, Download, Info, Calendar, SlidersHorizontal,
   Bell, Clock, MapPin, CheckCircle, AlertCircle, School,
-  Menu, X, ChevronRight, ArrowUpRight, Filter
+  Menu, X, ChevronRight, ArrowUpRight, Filter, BarChart3,
+  Target, Layers
 } from 'lucide-react';
 
 /* DATA IMPORT */
 import { schools, actionDistribution, monthly, TOTAL, fetchSheetData, loadLocalCache } from './dataStore';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 const fmtPct = (v) => Math.round((v / TOTAL) * 100);
 const fmtH = (v) => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 
@@ -126,25 +127,225 @@ function HorizontalBars({ data, max }) {
   );
 }
 
-function StateDistribution({ schoolsByState }) {
-  // schoolsByState is an array of { state, count } sorted by count descending
-  const max = schoolsByState[0]?.count || 1;
+const stateNames = {
+  AC:'Acre',AL:'Alagoas',AM:'Amazonas',AP:'Amapá',BA:'Bahia',CE:'Ceará',
+  DF:'Distrito Federal',ES:'Espírito Santo',GO:'Goiás',MA:'Maranhão',
+  MG:'Minas Gerais',MS:'Mato Grosso do Sul',MT:'Mato Grosso',PA:'Pará',
+  PB:'Paraíba',PE:'Pernambuco',PI:'Piauí',PR:'Paraná',RJ:'Rio de Janeiro',
+  RN:'Rio Grande do Norte',RO:'Rondônia',RR:'Roraima',RS:'Rio Grande do Sul',
+  SC:'Santa Catarina',SE:'Sergipe',SP:'São Paulo',TO:'Tocantins',
+};
+
+function MapStatePopup({ uf, onClose, onFilterByState }) {
+  const stateSchools = schools.filter(s => s.state === uf);
+  const totals = useMemo(() => {
+    let visits = 0, hours = 0, remote = 0, presencial = 0, participants = 0;
+    stateSchools.forEach(s => {
+      visits += s.visits; hours += s.hours; remote += s.remote;
+      presencial += s.presencial; participants += s.participants;
+    });
+    return { visits, hours, remote, presencial, participants, schoolCount: stateSchools.length };
+  }, [uf]);
+
+  const actionBreakdown = useMemo(() => {
+    const map = {};
+    stateSchools.forEach(s => {
+      s.actions?.forEach(a => {
+        if (a.count > 0) map[a.label] = (map[a.label] || 0) + a.count;
+      });
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  }, [uf]);
+
+  const maxAction = actionBreakdown[0]?.[1] || 1;
+  const remotePct = totals.visits > 0 ? Math.round((totals.remote / totals.visits) * 100) : 0;
+
   return (
-    <div className="state-distribution-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '220px', overflowY: 'auto', paddingRight: '6px' }}>
-      {schoolsByState.map(s => (
-        <div key={s.state} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '13px', fontWeight: '700', width: '32px', color: 'var(--gray-700)' }}>{s.state}</span>
-          <div style={{ flex: 1, height: '8px', background: 'var(--gray-100)', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{
-              height: '100%',
-              width: `${(s.count / max) * 100}%`,
-              background: s.count > 40 ? 'var(--blue)' : s.count > 15 ? 'var(--green)' : 'var(--orange)',
-              borderRadius: '4px'
-            }} />
+    <motion.div
+      className="map-popup-backdrop"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      onClick={onClose}
+    >
+      <motion.div
+        className="map-popup"
+        initial={{ opacity: 0, scale: 0.85, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+        onClick={e => e.stopPropagation()}
+      >
+        <button className="map-popup-close" onClick={onClose}><X size={18} /></button>
+
+        <div className="map-popup-header">
+          <motion.div
+            className="map-popup-badge"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', delay: 0.1, damping: 12 }}
+          >
+            {uf}
+          </motion.div>
+          <div>
+            <h3 className="map-popup-title">{stateNames[uf] || uf}</h3>
+            <p className="map-popup-subtitle">{totals.schoolCount} {totals.schoolCount === 1 ? 'unidade' : 'unidades'} atendidas</p>
           </div>
-          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--gray-500)', width: '64px', textAlign: 'right' }}>{s.count} atend.</span>
         </div>
-      ))}
+
+        <div className="map-popup-stats">
+          {[
+            { icon: HandHelping, value: totals.visits, label: 'Atendimentos', color: '#007EC3' },
+            { icon: Clock, value: `${fmtH(totals.hours)}h`, label: 'Horas', color: '#EDAA00' },
+            { icon: Users, value: totals.participants, label: 'Participantes', color: '#EA5B0C' },
+          ].map((s, i) => (
+            <motion.div
+              key={s.label}
+              className="map-popup-stat"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 * (i + 1) }}
+            >
+              <div className="map-popup-stat-icon" style={{ background: s.color }}><s.icon size={16} /></div>
+              <span className="map-popup-stat-value">{s.value}</span>
+              <span className="map-popup-stat-label">{s.label}</span>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="map-popup-modality">
+          <div className="map-popup-mod-bar">
+            <motion.div
+              className="map-popup-mod-fill-remote"
+              initial={{ width: 0 }}
+              animate={{ width: `${remotePct}%` }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            />
+          </div>
+          <div className="map-popup-mod-labels">
+            <span><i style={{ background: '#007EC3' }} /> Remoto {remotePct}%</span>
+            <span><i style={{ background: '#82BC00' }} /> Presencial {100 - remotePct}%</span>
+          </div>
+        </div>
+
+        {actionBreakdown.length > 0 && (
+          <div className="map-popup-actions">
+            <h4><Layers size={14} /> Top ações</h4>
+            {actionBreakdown.map(([label, count], i) => (
+              <motion.div
+                key={label}
+                className="map-popup-action-row"
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 * (i + 1) + 0.2 }}
+              >
+                <span className="map-popup-action-label">{label}</span>
+                <div className="map-popup-action-bar-track">
+                  <motion.div
+                    className="map-popup-action-bar"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(count / maxAction) * 100}%` }}
+                    transition={{ duration: 0.5, delay: 0.05 * (i + 1) + 0.25 }}
+                  />
+                </div>
+                <span className="map-popup-action-count">{count}</span>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {stateSchools.length > 0 && (
+          <div className="map-popup-schools">
+            <h4><School size={14} /> Unidades</h4>
+            <div className="map-popup-school-list">
+              {stateSchools.sort((a, b) => b.visits - a.visits).map((s, i) => (
+                <motion.div
+                  key={s.id}
+                  className="map-popup-school-item"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.03 * (i + 1) + 0.3 }}
+                >
+                  <span className="map-popup-school-name">{s.name}</span>
+                  <span className="map-popup-school-visits">{s.visits} atend.</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <motion.div
+          className="map-popup-footer"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          <button className="map-popup-filter-btn" onClick={() => { onFilterByState(uf); onClose(); }}>
+            <Filter size={14} /> Filtrar dashboard por {uf}
+          </button>
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function BrazilMap({ schoolsByState, onSelectState }) {
+  const anchors = {
+    RR:{cx:285.14,cy:74.9},AP:{cx:480.58,cy:88.71},PA:{cx:456.75,cy:204.46},
+    AM:{cx:216.61,cy:208.63},MA:{cx:618.06,cy:226.75},PI:{cx:665.6,cy:276.82},
+    CE:{cx:734.78,cy:227.18},RN:{cx:796.38,cy:242.73},TO:{cx:554.49,cy:335.66},
+    PB:{cx:792.95,cy:270.87},AC:{cx:97.84,cy:317.2},PE:{cx:768.53,cy:296.44},
+    MT:{cx:398.33,cy:394.74},RO:{cx:255.3,cy:351.82},BA:{cx:691.54,cy:384.38},
+    AL:{cx:797.01,cy:322.19},SE:{cx:780.08,cy:344.76},GO:{cx:527.37,cy:461.25},
+    MG:{cx:630.97,cy:512.23},DF:{cx:565.68,cy:455.01},MS:{cx:420.3,cy:552.3},
+    ES:{cx:713.46,cy:536.13},SP:{cx:545.83,cy:593.08},RJ:{cx:674.49,cy:591.15},
+    PR:{cx:486.44,cy:643.72},SC:{cx:511.29,cy:699.51},RS:{cx:453.43,cy:753.52},
+  };
+  const stateMap = {};
+  schoolsByState.forEach(s => { stateMap[s.state] = s.count; });
+  const getColor = (count) => {
+    if (!count || count === 0) return '#d1d5db';
+    if (count <= 10) return '#82BC00';
+    if (count <= 30) return '#EDAA00';
+    return '#EA5B0C';
+  };
+
+  const [popupUf, setPopupUf] = useState(null);
+
+  return (
+    <div className="brazil-map-section">
+      <div className="brazil-map-wrap">
+        <img src="./mapa-brasil-estados.svg" className="brazil-map-svg-obj" alt="Mapa do Brasil" />
+        <svg viewBox="12 -6 836 858" className="brazil-map-overlay">
+          {schoolsByState.map(s => {
+            const a = anchors[s.state];
+            if (!a) return null;
+            return (
+              <g key={s.state} style={{ cursor: 'pointer', pointerEvents: 'all' }} onClick={() => setPopupUf(s.state)}>
+                <circle cx={a.cx} cy={a.cy} r={28} fill={getColor(s.count)} opacity="0.2" />
+                <circle cx={a.cx} cy={a.cy} r={16} fill={getColor(s.count)} stroke="white" strokeWidth="3" />
+                <text x={a.cx} y={a.cy - 24} textAnchor="middle" fill="#1f2937" fontSize="26" fontWeight="800" fontFamily="'Bungee', sans-serif">{s.state}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      <div className="map-legend-row">
+        <div><span className="map-legend-dot" style={{background:'#d1d5db'}} /> 0</div>
+        <div><span className="map-legend-dot" style={{background:'#82BC00'}} /> 1 - 10</div>
+        <div><span className="map-legend-dot" style={{background:'#EDAA00'}} /> 11 - 30</div>
+        <div><span className="map-legend-dot" style={{background:'#EA5B0C'}} /> 31 - 60</div>
+      </div>
+      <AnimatePresence>
+        {popupUf && (
+          <MapStatePopup
+            uf={popupUf}
+            onClose={() => setPopupUf(null)}
+            onFilterByState={onSelectState}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -209,7 +410,7 @@ function ModalityCircle({ pct, count, label, color }) {
    PAGE VIEWS
    ═══════════════════════════════════════════════════════════════ */
 
-function OverviewPage({ totals, selectedSchool, setSelectedSchool, schoolsByState, onNavigate }) {
+function OverviewPage({ totals, selectedSchool, setSelectedSchool, schoolsByState, onNavigate, onFilterByState }) {
   const topUnits = schools.slice(0, 5).map((s, i) => ({
     name: s.name, visits: s.visits,
     color: ['#007EC3', '#82BC00', '#007EC3', '#EA5B0C', '#EA5B0C'][i]
@@ -222,24 +423,32 @@ function OverviewPage({ totals, selectedSchool, setSelectedSchool, schoolsByStat
     <>
       <section className="kpi-row">
         <div className="kpi-card kpi-blue">
-          <div className="kpi-icon"><Users size={24} /></div>
-          <div className="kpi-value">{totals.visits}</div>
-          <div className="kpi-label">ATENDIMENTOS REALIZADOS</div>
+          <div className="kpi-icon"><Users size={22} /></div>
+          <div className="kpi-body">
+            <div className="kpi-value">{totals.visits}</div>
+            <div className="kpi-label">ATENDIMENTOS REALIZADOS</div>
+          </div>
         </div>
         <div className="kpi-card kpi-yellow">
-          <div className="kpi-icon"><Clock size={24} /></div>
-          <div className="kpi-value">{fmtH(totals.hours)}h</div>
-          <div className="kpi-label">HORAS DE ATENDIMENTO</div>
+          <div className="kpi-icon"><Clock size={22} /></div>
+          <div className="kpi-body">
+            <div className="kpi-value">{fmtH(totals.hours)}h</div>
+            <div className="kpi-label">HORAS DE ATENDIMENTO</div>
+          </div>
         </div>
         <div className="kpi-card kpi-green">
-          <div className="kpi-icon"><Building2 size={24} /></div>
-          <div className="kpi-value">{totals.units}</div>
-          <div className="kpi-label">UNIDADES ATENDIDAS</div>
+          <div className="kpi-icon"><Building2 size={22} /></div>
+          <div className="kpi-body">
+            <div className="kpi-value">{totals.units}</div>
+            <div className="kpi-label">UNIDADES ATENDIDAS</div>
+          </div>
         </div>
         <div className="kpi-card kpi-orange">
-          <div className="kpi-icon"><Users size={24} /></div>
-          <div className="kpi-value">{totals.participants}</div>
-          <div className="kpi-label">PARTICIPANTES IMPACTADOS</div>
+          <div className="kpi-icon"><Users size={22} /></div>
+          <div className="kpi-body">
+            <div className="kpi-value">{totals.participants}</div>
+            <div className="kpi-label">PARTICIPANTES IMPACTADOS</div>
+          </div>
         </div>
         <div className="kpi-card kpi-modality">
           <div className="kpi-modality-title">REMOTO VS PRESENCIAL</div>
@@ -295,8 +504,8 @@ function OverviewPage({ totals, selectedSchool, setSelectedSchool, schoolsByStat
           <HorizontalBars data={barData} max={maxBarVal} />
         </div>
         <div className="card">
-          <h2 className="card-title">DISTRIBUIÇÃO POR ESTADO</h2>
-          <StateDistribution schoolsByState={schoolsByState} />
+          <h2 className="card-title">MAPA DE UNIDADES</h2>
+          <BrazilMap schoolsByState={schoolsByState} onSelectState={onFilterByState} />
         </div>
       </section>
     </>
@@ -705,12 +914,42 @@ function UpdateProgressModal({ isOpen, step, progress, message }) {
   );
 }
 
+function IntroVideoOverlay({ isOpen, onClose }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="intro-video-overlay">
+      <div className="intro-video-shell">
+        <div className="intro-brand-strip">
+          <img src="./marista-logo.png" alt="Marista" className="intro-brand-logo" />
+          <span>Rede Marista + ZET Lab</span>
+        </div>
+        <video
+          className="intro-video"
+          src="./marista-zetlab-intro.mp4"
+          poster="./marista-zetlab-intro-poster.jpg"
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          onEnded={onClose}
+        />
+        <button className="intro-skip-btn" type="button" onClick={onClose} aria-label="Entrar no dashboard">
+          Entrar no dashboard
+          <ChevronRight size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════════
    MAIN APP
    ═══════════════════════════════════════════════════════════════ */
 
 export default function App() {
   const [page, setPage] = useState('overview');
+  const [showIntro, setShowIntro] = useState(true);
   const [dataKey, setDataKey] = useState(0);
   const [updateState, setUpdateState] = useState({ isOpen: false, step: 0, progress: 0, message: '' });
   const [selectedSchool, setSelectedSchool] = useState(null);
@@ -833,6 +1072,7 @@ export default function App() {
 
   return (
     <div className="layout">
+      <IntroVideoOverlay isOpen={showIntro} onClose={() => setShowIntro(false)} />
       <UpdateProgressModal {...updateState} />
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -867,16 +1107,23 @@ export default function App() {
         </header>
 
         <section className="page-title-section">
-          <div className="title-deco">
+          <div className="page-title-brand-row">
+            <div className="page-title-copy">
+              <div className="title-deco">
             <i className="deco-circle deco-green" />
             <i className="deco-circle deco-orange" />
             <i className="deco-circle deco-blue" />
+              </div>
+              <h1 className="page-title">REDE MARISTA</h1>
+              <p className="page-subtitle">Resultados de Atendimento 2026{page !== 'overview' ? ` — ${pageTitle}` : ''}</p>
+            </div>
+            <div className="marista-brand-card" aria-label="Marista">
+              <img src="./marista-logo.png" alt="Marista" className="marista-brand-logo" />
+            </div>
           </div>
-          <h1 className="page-title">REDE MARISTA</h1>
-          <p className="page-subtitle">Resultados de Atendimento 2026{page !== 'overview' ? ` — ${pageTitle}` : ''}</p>
         </section>
 
-        {page === 'overview' && <OverviewPage totals={totals} selectedSchool={selectedSchool} setSelectedSchool={setSelectedSchool} schoolsByState={schoolsByState} onNavigate={navigate} />}
+        {page === 'overview' && <OverviewPage totals={totals} selectedSchool={selectedSchool} setSelectedSchool={setSelectedSchool} schoolsByState={schoolsByState} onNavigate={navigate} onFilterByState={(uf) => { setStateFilter(uf); }} />}
         {page === 'evolution' && <EvolutionPage />}
         {page === 'actions' && <ActionsPage />}
         {page === 'units' && (
