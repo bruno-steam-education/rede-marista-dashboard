@@ -126,59 +126,25 @@ function HorizontalBars({ data, max }) {
   );
 }
 
-function SouthBrazilMap({ schoolsByState }) {
-  const stateColors = {
-    RS: schoolsByState.RS > 30 ? '#EA5B0C' : schoolsByState.RS > 10 ? '#FFD500' : '#82BC00',
-    PR: schoolsByState.PR > 30 ? '#EA5B0C' : schoolsByState.PR > 10 ? '#FFD500' : '#82BC00',
-    SP: schoolsByState.SP > 30 ? '#EA5B0C' : schoolsByState.SP > 10 ? '#FFD500' : '#82BC00',
-    MG: schoolsByState.MG > 30 ? '#EA5B0C' : schoolsByState.MG > 10 ? '#FFD500' : '#82BC00',
-  };
-
+function StateDistribution({ schoolsByState }) {
+  // schoolsByState is an array of { state, count } sorted by count descending
+  const max = schoolsByState[0]?.count || 1;
   return (
-    <div className="mini-map">
-      <div className="map-container">
-        {/* Map Image */}
-        <img 
-          src="./mapa-sul.png" 
-          alt="Mapa do Sul do Brasil" 
-          className="map-image"
-        />
-        
-        {/* State Indicators overlaid absolutely */}
-        {/* Rio Grande do Sul (RS) */}
-        <div className="map-dot-wrapper" style={{ bottom: '25px', left: '65px' }}>
-          <span className="map-pulsing-dot" style={{ color: stateColors.RS, background: stateColors.RS }} />
-          <span className="map-state-label">RS</span>
-          <span className="map-state-count">{schoolsByState.RS} atend.</span>
+    <div className="state-distribution-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '220px', overflowY: 'auto', paddingRight: '6px' }}>
+      {schoolsByState.map(s => (
+        <div key={s.state} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '13px', fontWeight: '700', width: '32px', color: 'var(--gray-700)' }}>{s.state}</span>
+          <div style={{ flex: 1, height: '8px', background: 'var(--gray-100)', borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              width: `${(s.count / max) * 100}%`,
+              background: s.count > 40 ? 'var(--blue)' : s.count > 15 ? 'var(--green)' : 'var(--orange)',
+              borderRadius: '4px'
+            }} />
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--gray-500)', width: '64px', textAlign: 'right' }}>{s.count} atend.</span>
         </div>
-
-        {/* Paraná (PR) */}
-        <div className="map-dot-wrapper" style={{ top: '125px', right: '35px' }}>
-          <span className="map-pulsing-dot" style={{ color: stateColors.PR, background: stateColors.PR }} />
-          <span className="map-state-label">PR</span>
-          <span className="map-state-count">{schoolsByState.PR} atend.</span>
-        </div>
-
-        {/* São Paulo (SP) */}
-        <div className="map-dot-wrapper" style={{ top: '50px', right: '15px' }}>
-          <span className="map-pulsing-dot" style={{ color: stateColors.SP, background: stateColors.SP }} />
-          <span className="map-state-label">SP</span>
-          <span className="map-state-count">{schoolsByState.SP} atend.</span>
-        </div>
-
-        {/* Minas Gerais (MG) */}
-        <div className="map-dot-wrapper" style={{ top: '15px', left: '35px' }}>
-          <span className="map-pulsing-dot" style={{ color: stateColors.MG, background: stateColors.MG }} />
-          <span className="map-state-label">MG</span>
-          <span className="map-state-count">{schoolsByState.MG} atend.</span>
-        </div>
-      </div>
-      <div className="map-legend">
-        <div><span className="map-dot" style={{ background: '#d1d5db' }} /> 0</div>
-        <div><span className="map-dot" style={{ background: '#82BC00' }} /> 1-10</div>
-        <div><span className="map-dot" style={{ background: '#FFD500' }} /> 11-30</div>
-        <div><span className="map-dot" style={{ background: '#EA5B0C' }} /> 31-60</div>
-      </div>
+      ))}
     </div>
   );
 }
@@ -250,6 +216,7 @@ function OverviewPage({ totals, selectedSchool, setSelectedSchool, schoolsByStat
   }));
   const othersVisits = TOTAL - topUnits.reduce((s, u) => s + u.visits, 0);
   const barData = [...topUnits, { name: 'Outros', visits: othersVisits, color: '#6B7280' }];
+  const maxBarVal = Math.max(...barData.map(b => b.visits), 1);
 
   return (
     <>
@@ -325,11 +292,11 @@ function OverviewPage({ totals, selectedSchool, setSelectedSchool, schoolsByStat
         </div>
         <div className="card">
           <h2 className="card-title">ATENDIMENTOS POR UNIDADE (TOP 6)</h2>
-          <HorizontalBars data={barData} max={60} />
+          <HorizontalBars data={barData} max={maxBarVal} />
         </div>
         <div className="card">
-          <h2 className="card-title">MAPA DE UNIDADES</h2>
-          <SouthBrazilMap schoolsByState={schoolsByState} />
+          <h2 className="card-title">DISTRIBUIÇÃO POR ESTADO</h2>
+          <StateDistribution schoolsByState={schoolsByState} />
         </div>
       </section>
     </>
@@ -341,6 +308,21 @@ function EvolutionPage() {
     const prev = i > 0 ? acc[i - 1] : { remote: 0, presencial: 0 };
     acc.push({ month: m.month, remote: prev.remote + m.remote, presencial: prev.presencial + m.presencial });
     return acc;
+  }, []);
+
+  const totalsSummary = useMemo(() => {
+    let remote = 0, presencial = 0;
+    monthly.forEach(m => {
+      remote += m.remote;
+      presencial += m.presencial;
+    });
+    const total = remote + presencial;
+    return {
+      remote,
+      presencial,
+      total,
+      pctRemote: total > 0 ? Math.round(remote / total * 100) : 0
+    };
   }, []);
 
   return (
@@ -373,7 +355,11 @@ function EvolutionPage() {
               );
             })}
             <tr className="table-total">
-              <td><b>Total</b></td><td><b>102</b></td><td><b>62</b></td><td><b>164</b></td><td><b>62%</b></td>
+              <td><b>Total</b></td>
+              <td><b>{totalsSummary.remote}</b></td>
+              <td><b>{totalsSummary.presencial}</b></td>
+              <td><b>{totalsSummary.total}</b></td>
+              <td><b>{totalsSummary.pctRemote}%</b></td>
             </tr>
           </tbody>
         </table>
@@ -413,6 +399,10 @@ function ActionsPage() {
 }
 
 function UnitsPage({ onSelect, schoolsList, onOpenModal }) {
+  const maxVisits = useMemo(() => {
+    return Math.max(...schoolsList.map(s => s.visits), 1);
+  }, [schoolsList]);
+
   return (
     <>
       <h2 className="page-section-title">Todas as Unidades</h2>
@@ -430,7 +420,7 @@ function UnitsPage({ onSelect, schoolsList, onOpenModal }) {
               <span><b>{s.participants}</b> partic.</span>
             </div>
             <div className="unit-card-bar">
-              <div style={{ width: `${(s.visits / 53) * 100}%`, background: s.visits > 15 ? '#007EC3' : s.visits > 5 ? '#82BC00' : '#EA5B0C' }} />
+              <div style={{ width: `${(s.visits / maxVisits) * 100}%`, background: s.visits > 15 ? '#007EC3' : s.visits > 5 ? '#82BC00' : '#EA5B0C' }} />
             </div>
             <p className="unit-card-highlight">{s.highlight}</p>
             <span className="unit-card-resp">{s.responsible}</span>
@@ -450,14 +440,24 @@ function ParticipantsPage() {
     byResp[s.responsible].hours += s.hours;
   });
 
+  const totalsSummary = useMemo(() => {
+    let p = 0;
+    const states = new Set();
+    schools.forEach(s => {
+      p += s.participants;
+      if (s.state) states.add(s.state);
+    });
+    return { participants: p, schools: schools.length, states: states.size };
+  }, []);
+
   return (
     <>
       <h2 className="page-section-title">Participantes e Responsáveis</h2>
       <div className="kpi-row kpi-row-small">
-        <div className="kpi-card kpi-blue"><div className="kpi-icon"><Users size={20} /></div><div className="kpi-value">69</div><div className="kpi-label">PARTICIPANTES</div></div>
+        <div className="kpi-card kpi-blue"><div className="kpi-icon"><Users size={20} /></div><div className="kpi-value">{totalsSummary.participants}</div><div className="kpi-label">PARTICIPANTES</div></div>
         <div className="kpi-card kpi-green"><div className="kpi-icon"><Users size={20} /></div><div className="kpi-value">{Object.keys(byResp).length}</div><div className="kpi-label">RESPONSÁVEIS</div></div>
-        <div className="kpi-card kpi-orange"><div className="kpi-icon"><Building2 size={20} /></div><div className="kpi-value">12</div><div className="kpi-label">ESCOLAS</div></div>
-        <div className="kpi-card kpi-yellow"><div className="kpi-icon"><MapPin size={20} /></div><div className="kpi-value">4</div><div className="kpi-label">ESTADOS</div></div>
+        <div className="kpi-card kpi-orange"><div className="kpi-icon"><Building2 size={20} /></div><div className="kpi-value">{totalsSummary.schools}</div><div className="kpi-label">ESCOLAS</div></div>
+        <div className="kpi-card kpi-yellow"><div className="kpi-icon"><MapPin size={20} /></div><div className="kpi-value">{totalsSummary.states}</div><div className="kpi-label">ESTADOS</div></div>
       </div>
       <div className="card mt-16">
         <h2 className="card-title">RESPONSÁVEIS POR ESCOLA</h2>
@@ -555,7 +555,7 @@ function ExportPage() {
       const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = 'rede-esi-dados.csv'; a.click();
+      a.href = url; a.download = 'rede-marista-dados.csv'; a.click();
       URL.revokeObjectURL(url);
     }
   };
@@ -790,7 +790,7 @@ export default function App() {
   };
 
   const toggleStateFilter = () => {
-    const states = ['ALL', 'RS', 'SP', 'PR', 'MG'];
+    const states = ['ALL', ...new Set(schools.map(s => s.state).filter(Boolean))].sort();
     const idx = states.indexOf(stateFilter);
     const nextIdx = (idx + 1) % states.length;
     setStateFilter(states[nextIdx]);
@@ -814,9 +814,15 @@ export default function App() {
   }, [dataKey]);
 
   const schoolsByState = useMemo(() => {
-    const map = { RS: 0, PR: 0, SP: 0, MG: 0 };
-    schools.forEach(s => { map[s.state] = (map[s.state] || 0) + s.visits; });
-    return map;
+    const map = {};
+    schools.forEach(s => {
+      if (s.state) {
+        map[s.state] = (map[s.state] || 0) + s.visits;
+      }
+    });
+    return Object.entries(map)
+      .map(([state, count]) => ({ state, count }))
+      .sort((a, b) => b.count - a.count);
   }, [dataKey]);
 
   const navigate = (p) => { setPage(p); setSidebarOpen(false); window.scrollTo(0, 0); };
@@ -841,7 +847,7 @@ export default function App() {
             </button>
           ))}
         </nav>
-        <button className="sidebar-item sidebar-bottom-item" onClick={() => alert('Dashboard Rede ESI — Dados do Sistema de Atendimento ZOOM Education for Life.\n\nFonte: Planilha de atendimentos Jan-Jun 2026.\nÚltima atualização: 23/06/2026 11:30.')}>
+        <button className="sidebar-item sidebar-bottom-item" onClick={() => alert('Dashboard Rede Marista — Dados do Sistema de Atendimento ZOOM Education for Life.\n\nFonte: Planilha de atendimentos Jan-Jun 2026.\nÚltima atualização: 24/06/2026 08:30.')}>
           <Info size={20} />
           <span>Sobre os dados</span>
         </button>
@@ -866,7 +872,7 @@ export default function App() {
             <i className="deco-circle deco-orange" />
             <i className="deco-circle deco-blue" />
           </div>
-          <h1 className="page-title">REDE ESI</h1>
+          <h1 className="page-title">REDE MARISTA</h1>
           <p className="page-subtitle">Resultados de Atendimento 2026{page !== 'overview' ? ` — ${pageTitle}` : ''}</p>
         </section>
 
@@ -886,7 +892,7 @@ export default function App() {
         {page === 'export' && <ExportPage />}
 
         <footer className="dashboard-footer">
-          <span><Calendar size={14} /> Dados atualizados em 23/06/2026 11:30</span>
+          <span><Calendar size={14} /> Dados atualizados em 24/06/2026 08:30</span>
           <span className="footer-source">
             Fonte: Sistema de Atendimento ZOOM
             <img src="./logo 30 anos colorido zoom.png" alt="ZOOM" className="footer-logo-img" />

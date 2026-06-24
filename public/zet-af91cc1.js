@@ -146,18 +146,17 @@
         "Como eu começo por aqui?"
       ]
     },
-    "rede-esi": {
-      title: "ZET — Rede ESI",
-      intro: "Olá! Eu sou o ZET, assistente de inteligência artificial da ZOOM Education for Life. Estou aqui para te ajudar com insights sobre o dashboard da Rede ESI. Pergunte sobre escolas, ações, tendências ou qualquer dado que você ver aqui!",
+    "rede-marista": {
+      title: "ZET — Rede Marista",
+      intro: "Olá! Eu sou o ZET, assistente de inteligência artificial da ZOOM Education for Life. Estou aqui para te ajudar com insights sobre o dashboard da Rede Marista. Pergunte sobre escolas, ações, tendências ou qualquer dado que você ver aqui!",
       phrases: [
-        "São Carlos SVP lidera com 53 atendimentos — quer saber por quê?",
-        "62% dos atendimentos são remotos. Posso explicar essa tendência!",
-        "Plantão de dúvidas é a ação mais frequente. Quer entender o impacto?",
-        "A rede atende 12 escolas em 4 estados. Pergunta sobre alguma!",
-        "186,5 horas de atendimento em 2026. Quer ver como se distribuem?",
-        "Clique em mim para insights sobre os dados que você está vendo.",
-        "Posso comparar escolas, analisar tendências ou sugerir melhorias.",
-        "Maio foi o mês com mais atendimentos. Quer entender o contexto?"
+        "Colégio Marista Santo Antônio (Sinop) e Santa Mônica lideram com 28 atendimentos — quer saber por quê?",
+        "Temos atendimentos remotos e presenciais. Posso explicar essa tendência!",
+        "Plantão de dúvidas é uma das ações mais frequentes. Quer entender o impacto?",
+        "A rede atende 42 escolas em vários estados do Brasil. Pergunta sobre alguma!",
+        "Temos mais de 500 atendimentos registrados em 2026. Quer ver como se distribuem?",
+        "Clique em mim para obter insights sobre os dados que você está vendo.",
+        "Posso comparar escolas, analisar tendências ou sugerir melhorias."
       ],
       quick: [
         "Qual escola precisa de mais atenção?",

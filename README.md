@@ -1,6 +1,6 @@
-# REDE ESI - Dashboard Interativo
+# REDE MARISTA - Dashboard Interativo
 
-Dashboard web dos Resultados de Atendimento 2026 da Rede ESI, com identidade visual inspirada no Brandbook ZOOM.
+Dashboard web dos Resultados de Atendimento 2026 da Rede Marista, com identidade visual inspirada no Brandbook ZOOM.
 
 ## Design
 

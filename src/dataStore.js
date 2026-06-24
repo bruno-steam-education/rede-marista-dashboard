@@ -9,11 +9,11 @@ const COLORS = ['#005B96', '#82BC00', '#007EC3', '#EA5B0C', '#EDAA00', '#00A676'
 
 export const loadLocalCache = () => {
   try {
-    const cached = localStorage.getItem('redeEsiData');
+    const cached = localStorage.getItem('redeMaristaData');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (!parsed.TOTAL || !Array.isArray(parsed.schools) || parsed.schools.length === 0) {
-        localStorage.removeItem('redeEsiData');
+        localStorage.removeItem('redeMaristaData');
         return false;
       }
       schools = parsed.schools;
@@ -30,7 +30,7 @@ export const loadLocalCache = () => {
 
 export const fetchSheetData = () => {
   return new Promise((resolve, reject) => {
-    Papa.parse('https://docs.google.com/spreadsheets/d/1_upLb6WdHxg39MNvCyAeJ-H6ZLfvBqYpW_8qvpX1wDQ/gviz/tq?tqx=out:csv', {
+    Papa.parse('https://docs.google.com/spreadsheets/d/14KArMYhpUB_TkwYW1UGTiNyp1i2DP7pr/gviz/tq?tqx=out:csv', {
       download: true,
       header: true,
       skipEmptyLines: true,
@@ -38,7 +38,7 @@ export const fetchSheetData = () => {
         try {
           const oldTotal = TOTAL;
           processData(results.data);
-          localStorage.setItem('redeEsiData', JSON.stringify({ schools, actionDistribution, monthly, TOTAL }));
+          localStorage.setItem('redeMaristaData', JSON.stringify({ schools, actionDistribution, monthly, TOTAL }));
           resolve({ hasChanges: oldTotal !== TOTAL || oldTotal === 0, newTotal: TOTAL });
         } catch (e) {
           reject(e);
@@ -114,7 +114,7 @@ const processData = (data) => {
     if (!sMap[escola]) {
       sMap[escola] = {
         id: escola.replace(/[^a-zA-Z]/g, '').toLowerCase() || Math.random().toString(),
-        name: escola.replace('Rede Esi - ', '').replace('Colégio ', '').replace('Escola ', ''),
+        name: escola.replace('Rede Esi - ', '').replace('Rede Marista - ', '').replace('Colégio Marista ', '').replace('Colegio Marista ', '').replace('Escola Marista ', '').replace('Colégio ', '').replace('Colegio ', '').replace('Escola ', '').replace('Marista ', ''),
         fullName: escola,
         visits: 0, hours: 0, state: state, remote: 0, presencial: 0, participantsSet: new Set(),
         segmentsSet: new Set(),
