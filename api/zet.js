@@ -1,14 +1,63 @@
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+const RATE_LIMIT_WINDOW_MS = Number(process.env.ZET_RATE_LIMIT_WINDOW_MS || 60 * 1000);
+const RATE_LIMIT_MAX = Number(process.env.ZET_RATE_LIMIT_MAX || 30);
+const MAX_MESSAGE_CHARS = Number(process.env.ZET_MAX_MESSAGE_CHARS || 8000);
+const MAX_PAGE_CONTEXT_CHARS = Number(process.env.ZET_MAX_PAGE_CONTEXT_CHARS || 18000);
+const rateLimitStore = globalThis.__zetRateLimitStore || new Map();
+globalThis.__zetRateLimitStore = rateLimitStore;
 
 const DEFAULT_GROQ_MODEL = "llama-3.1-8b-instant";
 const DEFAULT_OPENROUTER_MODEL = "openai/gpt-oss-20b:free";
 
 function json(status, body) {
   return { status, body };
+}
+
+function getAllowedOrigin(origin) {
+  const allowed = (process.env.ALLOWED_ORIGINS || process.env.ZET_ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (!origin) return allowed[0] || "*";
+  if (allowed.length === 0 || allowed.includes("*")) return "*";
+  return allowed.includes(origin) ? origin : null;
+}
+
+function setCorsHeaders(req, res) {
+  const origin = getAllowedOrigin(req.headers.origin);
+  if (origin) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    if (origin !== "*") res.setHeader("Vary", "Origin");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Authorization, X-API-Key, Content-Type");
+}
+
+function getClientIp(req) {
+  return String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+    .split(",")[0]
+    .trim();
+}
+
+function isRateLimited(req) {
+  const key = getClientIp(req);
+  const now = Date.now();
+  const bucket = rateLimitStore.get(key) || { count: 0, resetAt: now + RATE_LIMIT_WINDOW_MS };
+  if (now > bucket.resetAt) {
+    bucket.count = 0;
+    bucket.resetAt = now + RATE_LIMIT_WINDOW_MS;
+  }
+  bucket.count += 1;
+  rateLimitStore.set(key, bucket);
+  return bucket.count > RATE_LIMIT_MAX;
+}
+
+function hasValidApiToken(req) {
+  const expected = process.env.ZET_API_TOKEN || process.env.API_ACCESS_TOKEN;
+  if (!expected) return true;
+  const auth = String(req.headers.authorization || "");
+  const bearer = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
+  const apiKey = String(req.headers["x-api-key"] || "").trim();
+  return bearer === expected || apiKey === expected;
 }
 
 function normalizeHistory(history = []) {
@@ -41,7 +90,7 @@ function buildSystemPrompt(body) {
     projectContext,
     body?.lessonTitle ? `Titulo do contexto: ${body.lessonTitle}` : "",
     body?.lessonKey ? `Chave da pagina: ${body.lessonKey}` : "",
-    pageText ? `Conteudo visivel no dashboard:\n${String(pageText).slice(0, 18000)}` : "",
+    pageText ? `Conteudo visivel no dashboard:\n${String(pageText).slice(0, MAX_PAGE_CONTEXT_CHARS)}` : "",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -80,7 +129,7 @@ async function callChatCompletion(provider, body) {
   const messages = [
     { role: "system", content: buildSystemPrompt(body) },
     ...normalizeHistory(body.history),
-    { role: "user", content: String(body.message || "").slice(0, 8000) },
+    { role: "user", content: String(body.message || "").slice(0, MAX_MESSAGE_CHARS) },
   ];
 
   const response = await fetch(provider.endpoint, {
@@ -111,19 +160,30 @@ async function callChatCompletion(provider, body) {
 }
 
 function send(res, status, body = null) {
-  Object.entries(CORS_HEADERS).forEach(([key, value]) => res.setHeader(key, value));
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   if (body === null) return res.status(status).end();
   return res.status(status).json(body);
 }
 
 export default async function handler(req, res) {
+  setCorsHeaders(req, res);
+
   if (req.method === "OPTIONS") {
     return send(res, 204);
   }
 
   if (req.method !== "POST") {
     const result = json(405, { error: "Metodo nao permitido" });
+    return send(res, result.status, result.body);
+  }
+
+  if (!hasValidApiToken(req)) {
+    const result = json(401, { error: "Acesso nao autorizado" });
+    return send(res, result.status, result.body);
+  }
+
+  if (isRateLimited(req)) {
+    const result = json(429, { error: "Muitas requisicoes. Tente novamente em instantes." });
     return send(res, result.status, result.body);
   }
 
@@ -139,6 +199,10 @@ export default async function handler(req, res) {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     if (!body?.message) {
       const result = json(400, { error: "Mensagem ausente" });
+      return send(res, result.status, result.body);
+    }
+    if (String(body.message).length > MAX_MESSAGE_CHARS) {
+      const result = json(413, { error: "Mensagem muito longa" });
       return send(res, result.status, result.body);
     }
 
